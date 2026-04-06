@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import { useAuthStore } from '@/stores/auth'
+
+const { t } = useI18n()
 
 const projectStore = useProjectStore()
 const authStore = useAuthStore()
@@ -10,9 +13,9 @@ const now = new Date()
 const hour = now.getHours()
 
 const greeting = computed(() => {
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (hour < 12) return t('home.goodMorning')
+  if (hour < 18) return t('home.goodAfternoon')
+  return t('home.goodEvening')
 })
 
 onMounted(async () => {
@@ -26,10 +29,10 @@ onMounted(async () => {
 })
 
 const stats = [
-  { label: 'Active Projects', key: 'projects', emoji: '📊', bg: 'bg-blue-50' },
-  { label: 'Total Requirements', key: 'requirements', emoji: '📋', bg: 'bg-emerald-50' },
-  { label: 'Test Coverage', key: 'coverage', emoji: '🎯', bg: 'bg-violet-50' },
-  { label: 'Team Members', key: 'members', emoji: '👥', bg: 'bg-amber-50' },
+  { label: t('home.activeProjects'), key: 'projects', emoji: '📊', bg: 'bg-blue-50' },
+  { label: t('home.totalRequirements'), key: 'requirements', emoji: '📋', bg: 'bg-emerald-50' },
+  { label: t('home.testCoverage'), key: 'coverage', emoji: '🎯', bg: 'bg-violet-50' },
+  { label: t('home.teamMembers'), key: 'members', emoji: '👥', bg: 'bg-amber-50' },
 ]
 
 function getStatValue(key: string): string | number {
@@ -71,7 +74,7 @@ const projectProgress = computed(() =>
       <h1 class="text-xl font-bold text-gray-900">
         {{ greeting }}{{ authStore.user?.username ? `, ${authStore.user.username}` : '' }}
       </h1>
-      <p class="mt-1 text-sm text-gray-500">Here is an overview of your workspace.</p>
+      <p class="mt-1 text-sm text-gray-500">{{ t('home.workspaceOverview') }}</p>
     </div>
 
     <!-- Stats cards -->
@@ -104,7 +107,7 @@ const projectProgress = computed(() =>
       <!-- Recent activity -->
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-4 border-b border-blue-500/8">
-          <h2 class="text-sm font-bold text-gray-900">Recent Activity</h2>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('home.recentActivity') }}</h2>
         </div>
         <div class="divide-y divide-blue-500/5">
           <div
@@ -123,7 +126,7 @@ const projectProgress = computed(() =>
       <!-- Project progress -->
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-4 border-b border-blue-500/8">
-          <h2 class="text-sm font-bold text-gray-900">Project Progress</h2>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('home.projectProgress') }}</h2>
         </div>
         <div class="p-5 space-y-4">
           <div
@@ -143,7 +146,7 @@ const projectProgress = computed(() =>
             </div>
           </div>
           <div v-if="projectProgress.length === 0" class="text-sm text-gray-400 text-center py-4">
-            No projects yet.
+            {{ t('home.noProjects') }}
           </div>
         </div>
       </div>
