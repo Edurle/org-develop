@@ -13,6 +13,7 @@ from app.models.user import User
 from app.schemas.task import (
     DevTaskCreate,
     DevTaskResponse,
+    DevTaskUpdate,
     TestTaskCreate,
     TestTaskResponse,
 )
@@ -108,6 +109,51 @@ async def update_dev_task_status(
         detail=f"Dev task status changed to '{body.status}'",
     )
     return DevTaskResponse.model_validate(t).model_dump()
+
+
+@router.patch("/dev-tasks/{task_id}", response_model=DevTaskResponse)
+async def update_dev_task(
+    task_id: str,
+    body: DevTaskUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    update_data = body.model_dump(exclude_unset=True)
+    update_data.pop("status", None)
+    update_data.pop("spec_version_id", None)
+    try:
+        t = await task_svc.update_dev_task(
+            db,
+            task_id=task_id,
+            title=update_data.get("title"),
+            estimate_hours=update_data.get("estimate_hours"),
+            assignee_id=update_data.get("assignee_id"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="task.dev.update",
+        resource_type="dev_task", resource_id=t.id,
+        detail=f"Updated dev task '{t.title}'",
+    )
+    return DevTaskResponse.model_validate(t).model_dump()
+
+
+@router.delete("/dev-tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_dev_task(
+    task_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await task_svc.delete_dev_task(db, task_id=task_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="task.dev.delete",
+        resource_type="dev_task", resource_id=task_id,
+        detail=f"Deleted dev task '{task_id}'",
+    )
 
 
 # ---------------------------------------------------------------------------

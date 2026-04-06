@@ -190,3 +190,51 @@ async def create_test_task(
     db.add(task)
     await db.flush()
     return task
+
+
+async def update_dev_task(
+    db: AsyncSession,
+    task_id: str,
+    title: str | None = None,
+    estimate_hours: float | None = None,
+    assignee_id: str | None = None,
+) -> DevTask:
+    """Update editable fields on a dev task."""
+    result = await db.execute(
+        select(DevTask).where(DevTask.id == task_id)
+    )
+    task = result.scalars().first()
+    if task is None:
+        raise ValueError(f"DevTask '{task_id}' not found")
+
+    if title is not None:
+        task.title = title
+    if estimate_hours is not None:
+        task.estimate_hours = estimate_hours
+    if assignee_id is not None:
+        task.assignee_id = assignee_id
+
+    await db.flush()
+    await db.refresh(task)
+    return task
+
+
+async def delete_dev_task(
+    db: AsyncSession,
+    task_id: str,
+) -> None:
+    """Delete a dev task that is still in 'open' status."""
+    result = await db.execute(
+        select(DevTask).where(DevTask.id == task_id)
+    )
+    task = result.scalars().first()
+    if task is None:
+        raise ValueError(f"DevTask '{task_id}' not found")
+
+    if task.status != "open":
+        raise ValueError(
+            f"Cannot delete task: status is '{task.status}', expected 'open'"
+        )
+
+    await db.delete(task)
+    await db.flush()
