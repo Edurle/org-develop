@@ -102,6 +102,7 @@ async def create_spec_version(
     # Update the specification's current_version pointer
     spec.current_version = next_version
     await db.flush()
+    await db.refresh(version)
     return version
 
 
@@ -137,6 +138,7 @@ async def submit_spec_for_review(
 
     version.status = "reviewing"
     await db.flush()
+    await db.refresh(version)
     return version
 
 
@@ -213,6 +215,7 @@ async def lock_spec(
                     },
                 )
 
+    await db.refresh(version)
     return version
 
 
@@ -236,6 +239,7 @@ async def reject_spec(
 
     version.status = "draft"
     await db.flush()
+    await db.refresh(version)
 
     # Dispatch webhook event for rejection
     spec_result = await db.execute(

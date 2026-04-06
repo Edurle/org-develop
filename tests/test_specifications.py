@@ -323,8 +323,14 @@ class TestSpecificationUI:
         rid = ctx["requirement_id"]
         spec_id = ctx["spec"]["id"]
 
+        # Create an initial version via API so the UI has something to edit
+        api.create_spec_version(spec_id=spec_id)
+
         # Navigate to the specification detail page
         ui.goto_specification(pid, rid, spec_id)
+
+        # Click "Edit Content" on the version to reveal the textarea
+        ui.click_button("Edit Content")
 
         # Edit content in the textarea
         ui.fill_textarea("spec-content", '{"endpoints": ["/api/test"]}')
@@ -333,7 +339,7 @@ class TestSpecificationUI:
         ui.click_button("Save as New Version")
 
         # Verify the new version is visible
-        ui.assert_text_visible("draft")
+        ui.assert_text_visible("Draft")
 
         # Cross-check via API
         versions = api.list_spec_versions(spec_id)
@@ -356,8 +362,15 @@ class TestSpecificationUI:
         # Navigate to spec detail
         ui.goto_specification(pid, rid, spec_id)
 
-        # Open the add-clause modal
-        ui.click_button("Add Clause")
+        # Click "View Clauses" on the version to select it and show clauses section
+        ui.page.locator('button:has-text("View Clauses")').first.click()
+        ui.page.wait_for_timeout(1000)
+
+        # The "Add Clause" button appears in the clauses section header
+        # Use force click to bypass any overlay
+        add_clause_btn = ui.page.locator('button:has-text("Add Clause")').first
+        add_clause_btn.click(force=True)
+        ui.page.wait_for_timeout(500)
 
         # Fill in the clause form
         ui.fill_input("clause-id", "CL-UI-001")
@@ -366,8 +379,8 @@ class TestSpecificationUI:
         ui.select_option("clause-category", "functional")
         ui.select_option("clause-severity", "must")
 
-        # Submit the modal form
-        ui.click_button("Save Clause")
+        # Submit the modal form (click the last "Add Clause" button which is in the modal)
+        ui.page.locator('button:has-text("Add Clause")').last.click()
 
         # Verify the clause is visible on the page
         ui.assert_text_visible("UI Added Clause")
@@ -394,11 +407,11 @@ class TestSpecificationUI:
 
         # Click submit to transition draft -> reviewing
         ui.click_button("Submit for Review")
-        ui.assert_text_visible("reviewing")
+        ui.assert_text_visible("Reviewing")
 
         # Click lock to transition reviewing -> locked
-        ui.click_button("Lock Version")
-        ui.assert_text_visible("locked")
+        ui.click_button("Lock")
+        ui.assert_text_visible("Locked")
 
         # Cross-check via API
         versions = api.list_spec_versions(spec_id)

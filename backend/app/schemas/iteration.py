@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class IterationCreate(BaseModel):
-    project_id: str
     name: str
     status: str = "planning"
     start_date: date | None = None

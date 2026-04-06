@@ -41,7 +41,7 @@ class UserResponse(BaseModel):
 
 class TeamMemberCreate(BaseModel):
     user_id: str
-    team_id: str
+    team_id: str | None = None
     roles: str = "developer"
 
 

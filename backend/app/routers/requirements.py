@@ -99,6 +99,7 @@ async def update_requirement(
     for field, value in update_data.items():
         setattr(req, field, value)
     await db.flush()
+    await db.refresh(req)
     return RequirementResponse.model_validate(req).model_dump()
 
 

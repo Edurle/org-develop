@@ -14,6 +14,12 @@ from helpers.api import ApiHelper
 from helpers.ui import UiHelper
 
 
+def _unique(suffix: str) -> str:
+    """Generate a unique slug using timestamp."""
+    import time
+    return f"{suffix}-{int(time.time() * 1000)}"
+
+
 # ===================================================================
 # API tests
 # ===================================================================
@@ -24,17 +30,18 @@ class TestOrganizationAPI:
 
     def test_create_organization(self, api: ApiHelper):
         """Create an org and verify all response fields are present."""
-        org = api.create_org(name="Acme Corp", slug="acme-corp")
+        slug = _unique("acme-corp")
+        org = api.create_org(name="Acme Corp", slug=slug)
 
         assert "id" in org and org["id"], "Missing id"
         assert org["name"] == "Acme Corp"
-        assert org["slug"] == "acme-corp"
+        assert org["slug"] == slug
         assert "created_at" in org, "Missing created_at"
         assert "updated_at" in org, "Missing updated_at"
 
     def test_list_organizations(self, api: ApiHelper):
         """Create an org, list orgs, and verify it appears in the list."""
-        org = api.create_org(name="ListOrg", slug="list-org")
+        org = api.create_org(name="ListOrg", slug=_unique("list-org"))
 
         orgs = api.list_orgs()
         assert isinstance(orgs, list)
@@ -47,18 +54,19 @@ class TestTeamAPI:
 
     def test_create_team(self, api: ApiHelper):
         """Create a team under an org and verify response fields."""
-        org = api.create_org(name="TeamOrg", slug="team-org")
-        team = api.create_team(org_id=org["id"], name="Backend", slug="backend")
+        org = api.create_org(name="TeamOrg", slug=_unique("team-org"))
+        team_slug = _unique("backend")
+        team = api.create_team(org_id=org["id"], name="Backend", slug=team_slug)
 
         assert "id" in team and team["id"], "Missing id"
         assert team["org_id"] == org["id"]
         assert team["name"] == "Backend"
-        assert team["slug"] == "backend"
+        assert team["slug"] == team_slug
 
     def test_list_teams(self, api: ApiHelper):
         """Create a team, list teams, and verify it appears in the list."""
-        org = api.create_org(name="ListTeamOrg", slug="list-team-org")
-        team = api.create_team(org_id=org["id"], name="ListTeam", slug="list-team")
+        org = api.create_org(name="ListTeamOrg", slug=_unique("list-team-org"))
+        team = api.create_team(org_id=org["id"], name="ListTeam", slug=_unique("list-team"))
 
         teams = api.list_teams()
         assert isinstance(teams, list)
@@ -67,8 +75,8 @@ class TestTeamAPI:
 
     def test_add_team_member(self, api: ApiHelper):
         """Add a member to a team and verify the response."""
-        org = api.create_org(name="MemberOrg", slug="member-org")
-        team = api.create_team(org_id=org["id"], name="MemberTeam", slug="member-team")
+        org = api.create_org(name="MemberOrg", slug=_unique("member-org"))
+        team = api.create_team(org_id=org["id"], name="MemberTeam", slug=_unique("member-team"))
 
         # Register a second user to add as a team member
         second = ApiHelper()
@@ -86,9 +94,9 @@ class TestTeamAPI:
 
     def test_list_team_members(self, api: ApiHelper):
         """Add a member, list members, and verify it appears in the list."""
-        org = api.create_org(name="ListMemberOrg", slug="list-member-org")
+        org = api.create_org(name="ListMemberOrg", slug=_unique("list-member-org"))
         team = api.create_team(
-            org_id=org["id"], name="ListMemberTeam", slug="list-member-team"
+            org_id=org["id"], name="ListMemberTeam", slug=_unique("list-member-team")
         )
 
         second = ApiHelper()
@@ -123,7 +131,7 @@ class TestTeamsUI:
 
         # Fill in the org form
         ui.fill_input("org-name", "UI Test Org")
-        ui.fill_input("org-slug", "ui-test-org")
+        ui.fill_input("org-slug", _unique("ui-test-org"))
 
         # Submit
         ui.click_button("Create Organization")
@@ -133,7 +141,7 @@ class TestTeamsUI:
 
     def test_teams_page_create_team(self, api: ApiHelper, ui: UiHelper):
         """Create an org via API, then use the UI to create a team in it."""
-        org = api.create_org(name="UI Team Org", slug="ui-team-org")
+        org = api.create_org(name="UI Team Org", slug=_unique("ui-team-org"))
 
         ui.goto_teams()
 
@@ -143,7 +151,7 @@ class TestTeamsUI:
         # Fill in the team modal
         ui.select_option("team-org", org["id"])
         ui.fill_input("team-name", "UI Test Team")
-        ui.fill_input("team-slug", "ui-test-team")
+        ui.fill_input("team-slug", _unique("ui-test-team"))
 
         # Submit
         ui.click_button("Create Team")

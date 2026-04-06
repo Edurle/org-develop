@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 # ---------------------------------------------------------------------------
 
 class SpecificationCreate(BaseModel):
-    requirement_id: str
+    requirement_id: str | None = None
     spec_type: str  # api, data, flow, ui
     title: str
     current_version: int = 0
@@ -39,8 +39,8 @@ class SpecificationResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class SpecVersionCreate(BaseModel):
-    spec_id: str
-    version: int
+    spec_id: str | None = None
+    version: int | None = None
     status: str = "draft"
     content: dict = {}
     locked_by: str | None = None
@@ -71,7 +71,7 @@ class SpecVersionResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class SpecClauseCreate(BaseModel):
-    spec_version_id: str
+    spec_version_id: str | None = None
     clause_id: str  # auto-generated, e.g. "API-001"
     title: str
     description: str

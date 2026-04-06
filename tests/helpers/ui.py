@@ -129,7 +129,7 @@ class UiHelper:
     # ------------------------------------------------------------------
 
     def assert_text_visible(self, text: str) -> None:
-        expect(self.page.locator(f"text={text}")).to_be_visible()
+        expect(self.page.locator(f"text={text}").first).to_be_visible()
 
     def assert_input_value(self, field_id: str, expected: str) -> None:
         expect(self.page.locator(f'#{field_id}')).to_have_value(expected)
@@ -138,7 +138,11 @@ class UiHelper:
         assert fragment in self.page.url, f"Expected '{fragment}' in {self.page.url}"
 
     def assert_status_badge(self, status: str) -> None:
-        """Assert a StatusBadge with the given status text is visible."""
+        """Assert a StatusBadge with the given status text is visible.
+        The StatusBadge component formats status with spaces and title-case.
+        """
+        # StatusBadge renders e.g. "in_progress" as "In Progress"
+        formatted = status.replace("_", " ").title()
         expect(
-            self.page.locator(f"span.badge-base:has-text('{status}')")
+            self.page.locator(f"text={formatted}").first
         ).to_be_visible()

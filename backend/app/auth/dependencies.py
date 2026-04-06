@@ -8,7 +8,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.security import decode_token, pwd_context
+import bcrypt
+
+from app.auth.security import decode_token
 from app.database import get_db
 from app.models.auth import ApiKey
 from app.models.user import User
@@ -59,7 +61,10 @@ async def get_current_user_from_api_key(
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     # Verify full key hash
-    if not pwd_context.verify(token, api_key.key_hash):
+    if not bcrypt.checkpw(
+        token.encode("utf-8"),
+        api_key.key_hash.encode("utf-8") if isinstance(api_key.key_hash, str) else api_key.key_hash,
+    ):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
@@ -100,5 +105,5 @@ def generate_api_key() -> tuple[str, str, str]:
     """Generate an API key. Returns (raw_key, prefix, hash)."""
     raw_key = f"odk_{secrets.token_urlsafe(32)}"
     prefix = raw_key[:8]
-    hashed = pwd_context.hash(raw_key)
+    hashed = bcrypt.hashpw(raw_key.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     return raw_key, prefix, hashed

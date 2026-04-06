@@ -19,6 +19,7 @@ from app.auth.security import (
 from app.database import get_db
 from app.models.auth import ApiKey
 from app.models.user import User
+from app.services.user import create_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -26,6 +27,13 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    display_name: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -71,6 +79,30 @@ async def login(req: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)])
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive",
+        )
+    token_data = {"sub": user.id, "username": user.username}
+    return TokenResponse(
+        access_token=create_access_token(token_data),
+        refresh_token=create_refresh_token(token_data),
+    )
+
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def register(req: RegisterRequest, db: Annotated[AsyncSession, Depends(get_db)]):
+    """Register a new user and return tokens."""
+    try:
+        user = await create_user(
+            db,
+            username=req.username,
+            email=req.email,
+            password=req.password,
+            display_name=req.display_name,
+        )
+        await db.commit()
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
         )
     token_data = {"sub": user.id, "username": user.username}
     return TokenResponse(

@@ -111,6 +111,7 @@ async def claim_dev_task(
     task.status = "in_progress"
     task.assignee_id = user_id
     await db.flush()
+    await db.refresh(task)
 
     await log_action(
         db, user_id=user_id, action="task.dev.claim",
@@ -152,6 +153,7 @@ async def update_task_status(
 
     task.status = new_status
     await db.flush()
+    await db.refresh(task)
 
     # Dispatch webhook
     project_id = await _get_project_id_for_requirement(db, task.requirement_id)

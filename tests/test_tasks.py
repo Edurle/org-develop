@@ -283,7 +283,7 @@ class TestTaskUI:
         ui.page.wait_for_timeout(500)
 
         # After claiming, the status should reflect in_progress
-        ui.assert_text_visible("in_progress")
+        ui.assert_text_visible("In Progress")
 
         # Cross-check via API
         tasks = api.list_dev_tasks(project_id=pid)
@@ -315,7 +315,7 @@ class TestTaskUI:
         ui.page.wait_for_timeout(500)
 
         # Verify the status changed
-        ui.assert_text_visible("review")
+        ui.assert_text_visible("Review")
 
         # Cross-check via API
         tasks = api.list_dev_tasks(project_id=pid)

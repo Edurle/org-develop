@@ -82,4 +82,5 @@ async def update_iteration(
     for field, value in update_data.items():
         setattr(it, field, value)
     await db.flush()
+    await db.refresh(it)
     return IterationResponse.model_validate(it).model_dump()

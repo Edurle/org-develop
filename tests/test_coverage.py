@@ -19,27 +19,37 @@ def _seed_to_testing_with_clause(api: ApiHelper, severity: str = "must") -> dict
 
     Returns dict with requirement, project, iteration, version, and clauses.
     """
-    data = api.seed_requirement_with_spec()
-    rid = data["requirement"]["id"]
+    data = api.seed()
+    pid = data["project"]["id"]
     iid = data["iteration"]["id"]
-    vid = data["version"]["id"]
 
-    # Clear default clause and create a custom one
-    clauses = api.list_clauses(version_id=vid)
+    req = api.create_requirement(project_id=pid, iteration_id=iid)
+    rid = req["id"]
+    api.update_requirement_status(rid, "spec_writing").raise_for_status()
 
-    # Add additional clause if needed
+    spec = api.create_specification(requirement_id=rid)
+    ver = api.create_spec_version(spec_id=spec["id"])
+
+    # Create clause BEFORE locking
     api.create_clause(
-        version_id=vid,
+        version_id=ver["id"],
         clause_id=f"CL-{severity.upper()}",
         title=f"{severity.title()} clause",
         description=f"A clause with {severity} severity",
         severity=severity,
     )
 
+    api.update_requirement_status(rid, "spec_review").raise_for_status()
+    api.submit_spec_version(ver["id"]).raise_for_status()
+    api.lock_spec_version(ver["id"]).raise_for_status()
+
     api.update_requirement_status(rid, "in_progress").raise_for_status()
     api.update_requirement_status(rid, "testing").raise_for_status()
 
-    data["clauses"] = api.list_clauses(version_id=vid)
+    data["requirement"] = req
+    data["spec"] = spec
+    data["version"] = ver
+    data["clauses"] = api.list_clauses(version_id=ver["id"])
     return data
 
 
@@ -80,7 +90,8 @@ class TestCoverageAPI:
         assert tc_resp.status_code == 201
         tc = tc_resp.json()
 
-        # Pass the test case
+        # Pass the test case (must go through running first)
+        api.update_test_case_status(tc["id"], "running").raise_for_status()
         api.update_test_case_status(tc["id"], "passed").raise_for_status()
 
         # Get coverage report
@@ -93,22 +104,39 @@ class TestCoverageAPI:
 
     def test_coverage_check_sufficient(self, api: ApiHelper, seed_data: dict):
         """must=100%, should>=80% should yield sufficient=True."""
-        data = api.seed_requirement_with_spec()
-        rid = data["requirement"]["id"]
+        data = api.seed()
+        pid = data["project"]["id"]
         iid = data["iteration"]["id"]
-        vid = data["version"]["id"]
 
-        # The seed already creates a must clause; add a should clause
-        should_clause = api.create_clause(
-            version_id=vid,
+        req = api.create_requirement(project_id=pid, iteration_id=iid)
+        rid = req["id"]
+        api.update_requirement_status(rid, "spec_writing").raise_for_status()
+
+        spec = api.create_specification(requirement_id=rid)
+        ver = api.create_spec_version(spec_id=spec["id"])
+
+        # Add must and should clauses BEFORE locking
+        api.create_clause(
+            version_id=ver["id"],
+            clause_id="CL-MU",
+            title="Must clause",
+            description="Required behavior",
+            severity="must",
+        )
+        api.create_clause(
+            version_id=ver["id"],
             clause_id="CL-SH",
             title="Should clause",
             description="Recommended behavior",
             severity="should",
         )
 
-        clauses = api.list_clauses(version_id=vid)
+        clauses = api.list_clauses(version_id=ver["id"])
         all_clause_ids = [c["id"] for c in clauses]
+
+        api.update_requirement_status(rid, "spec_review").raise_for_status()
+        api.submit_spec_version(ver["id"]).raise_for_status()
+        api.lock_spec_version(ver["id"]).raise_for_status()
 
         # Transition to testing
         api.update_requirement_status(rid, "in_progress").raise_for_status()
@@ -131,6 +159,7 @@ class TestCoverageAPI:
         assert tc_resp.status_code == 201
         tc = tc_resp.json()
 
+        api.update_test_case_status(tc["id"], "running").raise_for_status()
         api.update_test_case_status(tc["id"], "passed").raise_for_status()
 
         # Check coverage
@@ -155,26 +184,34 @@ class TestCoverageAPI:
 
     def test_coverage_check_insufficient_should(self, api: ApiHelper, seed_data: dict):
         """A should clause at 50% coverage (2 should clauses, only 1 covered) -> insufficient."""
-        data = api.seed_requirement_with_spec()
-        rid = data["requirement"]["id"]
+        data = api.seed()
+        pid = data["project"]["id"]
         iid = data["iteration"]["id"]
-        vid = data["version"]["id"]
 
-        # Create two should clauses (in addition to the must clause from seed)
+        req = api.create_requirement(project_id=pid, iteration_id=iid)
+        rid = req["id"]
+        api.update_requirement_status(rid, "spec_writing").raise_for_status()
+
+        spec = api.create_specification(requirement_id=rid)
+        ver = api.create_spec_version(spec_id=spec["id"])
+
+        # Add must + two should clauses BEFORE locking
+        api.create_clause(
+            version_id=ver["id"], clause_id="CL-MU",
+            title="Must", description="Required", severity="must",
+        )
         should1 = api.create_clause(
-            version_id=vid,
-            clause_id="CL-SH1",
-            title="Should clause 1",
-            description="Recommended A",
-            severity="should",
+            version_id=ver["id"], clause_id="CL-SH1",
+            title="Should clause 1", description="Recommended A", severity="should",
         )
-        should2 = api.create_clause(
-            version_id=vid,
-            clause_id="CL-SH2",
-            title="Should clause 2",
-            description="Recommended B",
-            severity="should",
+        api.create_clause(
+            version_id=ver["id"], clause_id="CL-SH2",
+            title="Should clause 2", description="Recommended B", severity="should",
         )
+
+        api.update_requirement_status(rid, "spec_review").raise_for_status()
+        api.submit_spec_version(ver["id"]).raise_for_status()
+        api.lock_spec_version(ver["id"]).raise_for_status()
 
         # Transition to testing
         api.update_requirement_status(rid, "in_progress").raise_for_status()
@@ -188,7 +225,7 @@ class TestCoverageAPI:
         task = task_resp.json()
 
         # Cover the must clause and only one of the two should clauses
-        clauses = api.list_clauses(version_id=vid)
+        clauses = api.list_clauses(version_id=ver["id"])
         must_clause = next(c for c in clauses if c["severity"] == "must")
         covered_ids = [must_clause["id"], should1["id"]]
 
@@ -201,6 +238,7 @@ class TestCoverageAPI:
         )
         assert tc_resp.status_code == 201
         tc = tc_resp.json()
+        api.update_test_case_status(tc["id"], "running").raise_for_status()
         api.update_test_case_status(tc["id"], "passed").raise_for_status()
 
         # Should coverage = 1/2 = 50% < 80% -> insufficient
@@ -283,10 +321,11 @@ class TestCoverageAPI:
         )
         assert tc_resp.status_code == 201
         tc = tc_resp.json()
+        api.update_test_case_status(tc["id"], "running").raise_for_status()
         api.update_test_case_status(tc["id"], "passed").raise_for_status()
 
         # Navigate to the coverage page
         ui.goto_coverage(pid, rid)
 
         # Verify 100% is visible on the page
-        ui.assert_text_visible("100%")
+        ui.assert_text_visible("100% required")

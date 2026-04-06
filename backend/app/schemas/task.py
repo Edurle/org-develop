@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 # ---------------------------------------------------------------------------
 
 class DevTaskCreate(BaseModel):
-    requirement_id: str
+    requirement_id: str | None = None
     spec_version_id: str | None = None
     iteration_id: str
     title: str
@@ -47,7 +47,7 @@ class DevTaskResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class TestTaskCreate(BaseModel):
-    requirement_id: str
+    requirement_id: str | None = None
     iteration_id: str
     title: str
     status: str = "open"

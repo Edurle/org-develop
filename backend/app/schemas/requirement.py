@@ -10,7 +10,7 @@ class RequirementCreate(BaseModel):
     title: str
     priority: str = "medium"
     status: str = "draft"
-    creator_id: str
+    creator_id: str | None = None
     assignee_id: str | None = None
 
 

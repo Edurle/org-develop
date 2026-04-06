@@ -446,53 +446,118 @@ class TestFullLifecycleViaUI:
         # ── Seed hierarchy via API ──
         data = api.seed()
         pid = data["project"]["id"]
+        iid = data["iteration"]["id"]
+
+        # Use a unique title to avoid collision with leftover data from prior runs
+        import uuid
+        req_title = f"Lifecycle-{uuid.uuid4().hex[:8]}"
 
         # ── Navigate to project requirements page ──
         ui.goto_project_requirements(pid)
-        ui.assert_text_visible("Requirements")
+        ui.page.wait_for_selector('button:has-text("New Requirement")', state="visible")
 
-        # ── Click "New Requirement" button ──
+        # ── Click "New Requirement" button to open modal ──
         ui.click_button("New Requirement")
-        # Modal should appear with title "New Requirement"
-        ui.assert_text_visible("New Requirement")
+        ui.page.wait_for_selector('input[id="req-title"]', state="visible")
 
         # ── Fill in requirement form ──
-        ui.fill_input("title", "UI Lifecycle Test Requirement")
-        # Note: priority select uses v-model on <select> within the Modal
-        # The modal form has a select for priority with class "select-glass"
-        # We use the general fill approach targeting the visible modal
+        ui.fill_input("req-title", req_title)
 
-        # ── Submit the form ──
-        # The Modal has a "Create" button (the create requirement modal)
-        ui.click_button("Create")
+        # ── Submit the form via the modal's Create button ──
+        ui.page.locator('.fixed button:has-text("Create")').click()
 
-        # ── Wait for modal to close and requirement to appear ──
-        ui.page.wait_for_timeout(2000)
+        # Wait for modal to close and row to appear
+        ui.page.wait_for_selector('input[id="req-title"]', state="hidden", timeout=5000)
+        ui.page.wait_for_selector(
+            f'tr:has-text("{req_title}")', state="visible", timeout=5000
+        )
 
-        # ── Verify requirement is visible in the list ──
-        ui.assert_text_visible("UI Lifecycle Test Requirement")
+        # ── Get requirement ID via API ──
+        reqs = api.list_requirements(pid)
+        rid = next((r["id"] for r in reqs if r["title"] == req_title), None)
+        assert rid is not None, f"Requirement '{req_title}' not found"
 
-        # ── Click on the requirement to open detail view ──
-        # The requirement row is clickable and navigates to detail
-        ui.page.click("text=UI Lifecycle Test Requirement")
+        # ── Navigate directly to requirement detail page ──
+        ui.goto_requirement(pid, rid)
 
-        # ── Wait for detail page to load ──
+        # ── Requirement starts in draft status ──
+        # Verify the "Start Spec Writing" button is present (confirms draft status)
+        assert ui.page.locator('button:has-text("Start Spec Writing")').is_visible()
+
+        # ── Create spec + version + clause via API (while in draft) ──
+        spec = api.create_specification(requirement_id=rid, title="Auth Spec")
+        ver = api.create_spec_version(spec_id=spec["id"])
+        c_must = api.create_clause(
+            version_id=ver["id"],
+            clause_id="FUNC-001",
+            title="Login works",
+            description="User can log in",
+            severity="must",
+        )
+
+        # ── draft → spec_writing via UI ──
+        ui.page.locator('button:has-text("Start Spec Writing")').first.click()
+        # Wait for status to update (badge shows "Spec Writing", buttons change)
+        ui.page.locator('button:has-text("Submit for Review")').wait_for(state="visible", timeout=5000)
+
+        # ── spec_writing → spec_review via UI ──
+        ui.page.locator('button:has-text("Submit for Review")').first.click()
+        ui.page.locator('button:has-text("Lock")').wait_for(state="visible", timeout=5000)
+
+        # ── Submit and lock spec version via API (auto-transitions req to spec_locked) ──
+        api.submit_spec_version(ver["id"]).raise_for_status()
+        api.lock_spec_version(ver["id"]).raise_for_status()
+
+        # ── Reload to reflect auto-transition to spec_locked ──
+        ui.page.reload()
         ui.page.wait_for_load_state("networkidle")
+        ui.assert_status_badge("spec_locked")
 
-        # ── Verify detail page shows requirement title and draft status ──
-        ui.assert_text_visible("UI Lifecycle Test Requirement")
+        # ── spec_locked → in_progress via UI ──
+        ui.page.locator('button:has-text("Start Development")').first.click()
+        ui.assert_status_badge("in_progress")
 
-        # ── Click "Start Spec Writing" button ──
-        ui.click_button("Start Spec Writing")
-        ui.page.wait_for_timeout(2000)
+        # ── Create and complete dev task via API ──
+        resp = api.create_dev_task(
+            requirement_id=rid,
+            spec_version_id=ver["id"],
+            iteration_id=iid,
+            title="Implement feature",
+        )
+        resp.raise_for_status()
+        dt = resp.json()
+        api.claim_dev_task(dt["id"]).raise_for_status()
+        api.update_dev_task_status(dt["id"], "review").raise_for_status()
+        api.update_dev_task_status(dt["id"], "done").raise_for_status()
 
-        # ── Verify status updated to spec_writing ──
-        # The status badge should now show "spec writing"
-        ui.assert_status_badge("spec_writing")
+        # ── in_progress → testing via UI ──
+        ui.page.locator('button:has-text("Start Testing")').first.click()
+        ui.assert_status_badge("testing")
 
-        # ── Click "Submit for Review" ──
-        ui.click_button("Submit for Review")
-        ui.page.wait_for_timeout(2000)
+        # ── Create test task + test case + pass via API ──
+        resp = api.create_test_task(
+            requirement_id=rid,
+            iteration_id=iid,
+            title="Test feature",
+        )
+        resp.raise_for_status()
+        tt = resp.json()
+        resp = api.create_test_case(
+            test_task_id=tt["id"],
+            title="Verify login",
+            steps="1. Submit form",
+            expected_result="Success",
+            clause_ids=[c_must["id"]],
+        )
+        resp.raise_for_status()
+        tc = resp.json()
+        api.update_test_case_status(tc["id"], "running").raise_for_status()
+        api.update_test_case_status(tc["id"], "passed").raise_for_status()
 
-        # ── Verify status updated to spec_review ──
-        ui.assert_status_badge("spec_review")
+        # ── Verify coverage is sufficient ──
+        check = api.check_coverage(rid)
+        assert check["sufficient"] is True
+
+        # ── testing → done via UI ──
+        ui.page.locator('button:has-text("Mark Done")').first.click()
+        ui.assert_status_badge("done")

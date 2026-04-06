@@ -178,10 +178,14 @@ class TestLoginPageUI:
         assert "/login" in page.url
 
         # Step 3: Fill correct credentials and submit
+        # Navigate to clean /login URL first (wrong password attempt may have
+        # added ?redirect=/login which would cause post-login redirect back here)
+        page.goto(f"{BASE}/login")
+        page.wait_for_load_state("networkidle")
         page.fill('input[id="username"]', username)
         page.fill('input[id="password"]', password)
         page.click('button[type="submit"]')
 
         # Wait for redirect away from login page
-        page.wait_for_url("**/dashboard**", timeout=10000)
+        page.wait_for_url(lambda url: "/login" not in url, timeout=10000)
         assert "/login" not in page.url

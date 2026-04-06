@@ -51,10 +51,12 @@ def logged_in_page(page: Page, api: ApiHelper) -> Page:
     page.goto(f"{BASE_URL}/login")
     page.evaluate(f'localStorage.setItem("token", "{token}")')
     page.evaluate(
-        'localStorage.setItem("user", JSON.stringify({{"username": "test"}}))'
+        f'localStorage.setItem("user", JSON.stringify({{"username": "{api.user_id}"}}))'
     )
     page.goto(BASE_URL)
     page.wait_for_load_state("networkidle")
+    # Ensure the page is fully loaded and authenticated
+    page.wait_for_timeout(500)
     return page
 
 

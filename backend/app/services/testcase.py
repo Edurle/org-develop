@@ -117,6 +117,7 @@ async def update_test_case_status(
 
     test_case.status = new_status
     await db.flush()
+    await db.refresh(test_case)
     await log_action(
         db, user_id=user_id, action="testcase.update_status",
         resource_type="test_case", resource_id=test_case.id,

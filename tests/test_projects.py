@@ -141,16 +141,27 @@ class TestProjectUI:
         """Edit the project name inline on the overview page."""
         project_id = seed_data["project"]["id"]
 
-        # Navigate to project overview
+        # Navigate to project overview and wait for the edit button
         ui.goto_project(project_id)
+        ui.page.wait_for_selector('[title="Edit name"]', state="visible")
+        ui.page.wait_for_timeout(500)
 
         # Click the pencil icon to start editing
         ui.click_element_with_title("Edit name")
 
-        # Type the new name and save
-        ui.page.keyboard.press("Control+a")
-        ui.page.keyboard.type("Inline Edited Name")
-        ui.click_button("Save")
+        # Wait for the inline input to appear (Vue reactivity)
+        save_btn = ui.page.locator('button:has-text("Save")').first
+        save_btn.wait_for(state="visible")
+
+        # Fill the input using fill() which properly triggers Vue v-model
+        edit_input = ui.page.locator('input[type="text"].input-glass').first
+        edit_input.fill("Inline Edited Name")
+
+        # Click Save
+        save_btn.click()
+
+        # Wait for API update to complete
+        ui.page.wait_for_timeout(1000)
 
         # Verify the new name is visible
         ui.assert_text_visible("Inline Edited Name")
@@ -166,6 +177,10 @@ class TestProjectUI:
         # Navigate to settings
         ui.goto_project_settings(project_id)
 
+        # Wait for form to be populated
+        ui.page.wait_for_selector('input[id="settings-name"]', state="visible")
+        ui.page.wait_for_timeout(500)
+
         # Update fields
         ui.fill_input("settings-name", "Settings Updated Name")
         ui.fill_input("settings-slug", "settings-updated-slug")
@@ -173,6 +188,7 @@ class TestProjectUI:
 
         # Save
         ui.click_button("Save Changes")
+        ui.page.wait_for_timeout(2000)
 
         # Verify via API
         fetched = api.get_project(project_id)
@@ -192,20 +208,27 @@ class TestProjectUI:
         project_id = project["id"]
         project_name = project["name"]
 
-        # Navigate to settings
+        # Navigate to settings and wait for the form to load
         ui.goto_project_settings(project_id)
+        ui.page.wait_for_selector('input[id="settings-name"]', state="visible")
+        ui.page.wait_for_timeout(500)
 
-        # Click delete button to open confirmation modal
+        # Click the danger zone "Delete Project" button to open the modal
+        # (before modal opens, there is only one such button on the page)
         ui.click_button("Delete Project")
+
+        # Wait for the confirmation modal to appear
+        ui.page.wait_for_selector('input[id="delete-confirm"]', state="visible")
 
         # Type the project name to confirm deletion
         ui.fill_input("delete-confirm", project_name)
 
-        # Confirm deletion (click the confirm button in the modal)
-        ui.page.click('.modal button:has-text("Delete")')
+        # Click the modal's confirm button (inside the .fixed Teleport'd modal)
+        # Playwright auto-waits for the button to become enabled
+        ui.page.locator('.fixed button:has-text("Delete Project")').click()
 
         # Should be redirected away from the project page
-        ui.page.wait_for_timeout(1000)
+        ui.page.wait_for_timeout(2000)
         assert f"/projects/{project_id}" not in ui.page.url
 
         # Verify via API that the project is gone
@@ -223,16 +246,23 @@ class TestProjectUI:
 
         # Navigate to members page
         ui.goto_project_members(project_id)
+        ui.page.wait_for_timeout(1000)
 
-        # Open add-member modal
+        # Open add-member modal (before modal opens, only one "Add Member" button)
         ui.click_button("Add Member")
+
+        # Wait for the modal to appear
+        ui.page.wait_for_selector('input[id="member-user-id"]', state="visible")
 
         # Fill in the member details
         ui.fill_input("member-user-id", other.user_id)
-        ui.select_option("member-role", "developer")
+        ui.select_option("member-role", "member")
 
-        # Submit
-        ui.click_button("Add Member")
+        # Submit via the modal's "Add Member" button (inside the .fixed Teleport'd modal)
+        ui.page.locator('.fixed button:has-text("Add Member")').click()
+
+        # Wait for the member to appear in the list
+        ui.page.wait_for_timeout(1000)
 
         # Verify the new member is listed
         ui.assert_text_visible(other.user_id)
@@ -249,22 +279,30 @@ class TestProjectUI:
 
         # Start at the overview page
         ui.goto_project(project_id)
-        ui.assert_text_visible(project_name)
+        ui.page.wait_for_selector(f'text="{project_name}"', state="visible")
 
-        # Navigate to Requirements tab
+        # Navigate to Requirements tab — wait for page content before moving on
         ui.click_link("Requirements")
+        ui.page.wait_for_url(f"**/projects/{project_id}/requirements", timeout=5000)
+        ui.page.wait_for_selector('button:has-text("New Requirement")', state="visible")
         ui.assert_url_contains(f"/projects/{project_id}/requirements")
 
         # Navigate to Tasks tab
         ui.click_link("Tasks")
+        ui.page.wait_for_url(f"**/projects/{project_id}/tasks", timeout=5000)
+        ui.page.wait_for_timeout(500)
         ui.assert_url_contains(f"/projects/{project_id}/tasks")
 
         # Navigate to Members tab
         ui.click_link("Members")
+        ui.page.wait_for_url(f"**/projects/{project_id}/members", timeout=5000)
+        ui.page.wait_for_selector('button:has-text("Add Member")', state="visible")
         ui.assert_url_contains(f"/projects/{project_id}/members")
 
         # Navigate to Settings tab
         ui.click_link("Settings")
+        ui.page.wait_for_url(f"**/projects/{project_id}/settings", timeout=5000)
+        ui.page.wait_for_selector('input[id="settings-name"]', state="visible")
         ui.assert_url_contains(f"/projects/{project_id}/settings")
 
         # Verify settings page has the expected form

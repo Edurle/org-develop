@@ -274,6 +274,7 @@ class TestRequirementAPI:
         test_case = tc_resp.json()
 
         # Mark the test case as passed so coverage is satisfied
+        api.update_test_case_status(test_case["id"], "running").raise_for_status()
         api.update_test_case_status(test_case["id"], "passed").raise_for_status()
 
         # Now the transition to done should succeed

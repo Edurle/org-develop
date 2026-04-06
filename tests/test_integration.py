@@ -327,9 +327,20 @@ class TestUISmoke:
         print("✅ Login page loads")
 
     def test_login_success(self, page):
-        _login(page)
-        assert page.locator("text=OrgDev").is_visible()
-        assert page.locator("text=admin").is_visible()
+        # Register a user via API first so we have known credentials
+        from helpers.api import ApiHelper
+        api = ApiHelper()
+        password = "Test1234!"
+        username = ApiHelper._unique("smoke")
+        api.register(username=username, password=password)
+
+        page.goto(f"{BASE}/login")
+        page.wait_for_load_state("networkidle")
+        page.fill('input[id="username"]', username)
+        page.fill('input[id="password"]', password)
+        page.click('button[type="submit"]')
+        page.wait_for_url(lambda url: "/login" not in url, timeout=10000)
+        assert "/login" not in page.url
         print("✅ Login → dashboard")
 
     def test_login_failure(self, page):

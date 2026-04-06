@@ -126,6 +126,7 @@ onMounted(loadData)
     <!-- Filter bar -->
     <div class="flex items-center gap-3 mb-4">
       <select
+        id="filter-status"
         v-model="statusFilter"
         class="select-glass !w-auto"
         @change="applyFilters"
@@ -229,6 +230,7 @@ onMounted(loadData)
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
           <input
+            id="req-title"
             v-model="newTitle"
             type="text"
             placeholder="Requirement title"
@@ -240,6 +242,7 @@ onMounted(loadData)
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
           <select
+            id="req-priority"
             v-model="newPriority"
             class="select-glass"
           >
@@ -250,6 +253,7 @@ onMounted(loadData)
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Iteration</label>
           <select
+            id="req-iteration"
             v-model="newIterationId"
             class="select-glass"
           >

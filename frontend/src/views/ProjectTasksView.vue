@@ -142,6 +142,7 @@ onMounted(loadData)
                   </button>
                   <!-- Status dropdown for transitions -->
                   <select
+                    id="task-status"
                     class="select-glass !w-auto !py-1.5 !px-2 text-xs"
                     :value="task.status"
                     @change="handleStatusChange(task.id, ($event.target as HTMLSelectElement).value)"

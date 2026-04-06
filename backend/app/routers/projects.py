@@ -86,6 +86,7 @@ async def update_project(
     for field, value in update_data.items():
         setattr(proj, field, value)
     await db.flush()
+    await db.refresh(proj)
     await log_action(
         db, user_id=user.id, action="project.update",
         resource_type="project", resource_id=proj.id,

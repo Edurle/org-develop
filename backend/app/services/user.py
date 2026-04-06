@@ -66,6 +66,7 @@ async def update_user(
     if display_name is not None:
         user.display_name = display_name
     await db.flush()
+    await db.refresh(user)
     await log_action(
         db, user_id=user_id, action="user.update",
         resource_type="user", resource_id=user_id,

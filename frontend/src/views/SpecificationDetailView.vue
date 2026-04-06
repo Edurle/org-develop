@@ -188,7 +188,7 @@ onMounted(loadAll)
               </div>
             </div>
             <div v-if="editingVersionId === ver.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
-              <textarea v-model="editContent" class="input-glass font-mono h-64 resize-y" placeholder="JSON content" />
+              <textarea id="spec-content" v-model="editContent" class="input-glass font-mono h-64 resize-y" placeholder="JSON content" />
               <div class="flex items-center justify-end gap-2 mt-2">
                 <button class="btn-secondary px-3 py-1.5 text-xs" @click="cancelEdit">Cancel</button>
                 <button class="btn-primary px-3 py-1.5 text-xs" @click="saveContent">Save as New Version</button>
@@ -238,26 +238,26 @@ onMounted(loadAll)
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Clause ID</label>
-            <input v-model="newClauseId" type="text" placeholder="e.g. REQ-001" class="input-glass" />
+            <input id="clause-id" v-model="newClauseId" type="text" placeholder="e.g. REQ-001" class="input-glass" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Title</label>
-            <input v-model="newClauseTitle" type="text" placeholder="Clause title" class="input-glass" />
+            <input id="clause-title" v-model="newClauseTitle" type="text" placeholder="Clause title" class="input-glass" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Description</label>
-            <textarea v-model="newClauseDescription" placeholder="Clause description" class="input-glass resize-y" rows="3" />
+            <textarea id="clause-description" v-model="newClauseDescription" placeholder="Clause description" class="input-glass resize-y" rows="3" />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1.5">Category</label>
-              <select v-model="newClauseCategory" class="select-glass">
+              <select id="clause-category" v-model="newClauseCategory" class="select-glass">
                 <option v-for="cat in categoryOptions" :key="cat" :value="cat">{{ cat }}</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1.5">Severity</label>
-              <select v-model="newClauseSeverity" class="select-glass">
+              <select id="clause-severity" v-model="newClauseSeverity" class="select-glass">
                 <option v-for="sev in severityOptions" :key="sev" :value="sev">{{ sev.toUpperCase() }}</option>
               </select>
             </div>
