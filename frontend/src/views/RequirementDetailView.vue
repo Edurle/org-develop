@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useRequirementStore } from '@/stores/requirement'
 import { useSpecificationStore } from '@/stores/specification'
 import { useTaskStore } from '@/stores/task'
@@ -14,6 +15,7 @@ import type { SpecType, Priority, DevTask, TestCase } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const reqStore = useRequirementStore()
 const specStore = useSpecificationStore()
 const taskStore = useTaskStore()
@@ -103,30 +105,30 @@ const statusActions = computed(() => {
   const s = currentReq.value.status
   switch (s) {
     case 'draft':
-      return [{ label: 'Start Spec Writing', status: 'spec_writing' }]
+      return [{ label: t('requirement.startSpecWriting'), status: 'spec_writing' }]
     case 'spec_writing':
-      return [{ label: 'Submit for Review', status: 'spec_review' }]
+      return [{ label: t('requirement.submitForReview'), status: 'spec_review' }]
     case 'spec_review':
       return [
-        { label: 'Lock', status: 'spec_locked' },
-        { label: 'Reject', status: 'spec_rejected' },
+        { label: t('requirement.lock'), status: 'spec_locked' },
+        { label: t('requirement.reject'), status: 'spec_rejected' },
       ]
     case 'spec_locked':
-      return [{ label: 'Start Development', status: 'in_progress' }]
+      return [{ label: t('requirement.startDevelopment'), status: 'in_progress' }]
     case 'in_progress':
-      return [{ label: 'Start Testing', status: 'testing' }]
+      return [{ label: t('requirement.startTesting'), status: 'testing' }]
     case 'testing':
-      return [{ label: 'Mark Done', status: 'done' }]
+      return [{ label: t('requirement.markDone'), status: 'done' }]
     default:
       return []
   }
 })
 
 const devTasksForReq = computed(() =>
-  taskStore.devTasks.filter((t) => t.requirement_id === reqId.value),
+  taskStore.devTasks.filter((task) => task.requirement_id === reqId.value),
 )
 const testTasksForReq = computed(() =>
-  taskStore.testTasks.filter((t) => t.requirement_id === reqId.value),
+  taskStore.testTasks.filter((task) => task.requirement_id === reqId.value),
 )
 
 function formatDate(dateStr: string): string {
@@ -145,7 +147,7 @@ async function loadAll() {
       taskStore.fetchTestTasks(projectId.value),
     ])
   } catch (e: any) {
-    error.value = e?.message || 'Failed to load requirement'
+    error.value = e?.message || t('requirement.errorLoadFailed')
   } finally {
     loading.value = false
   }
@@ -156,7 +158,7 @@ async function handleStatusTransition(newStatus: string) {
   try {
     await reqStore.updateStatus(currentReq.value.id, newStatus)
   } catch (e: any) {
-    error.value = e?.message || 'Failed to update status'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -193,7 +195,7 @@ async function handleCreateSpec() {
     })
     showCreateSpecModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to create specification'
+    error.value = e?.message || t('specification.errorLoadFailed')
   }
 }
 
@@ -215,7 +217,7 @@ async function handleCreateDevTask() {
     })
     showCreateDevTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to create dev task'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -233,7 +235,7 @@ async function handleCreateTestTask() {
     })
     showCreateTestTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to create test task'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -243,7 +245,7 @@ async function loadCoverage() {
     const check = await coverageStore.checkSufficient(reqId.value)
     coverageSufficient.value = check.sufficient
   } catch (e: any) {
-    error.value = e?.message || 'Failed to load coverage'
+    error.value = e?.message || t('coverage.loadFailed')
   }
 }
 
@@ -270,7 +272,7 @@ async function handleEditReq() {
     })
     showEditReqModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to update requirement'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -291,7 +293,7 @@ async function handleEditDevTask() {
     })
     showEditDevTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to update dev task'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -306,7 +308,7 @@ async function handleDeleteDevTask() {
     await taskStore.removeDevTask(deleteDevTaskId.value)
     showDeleteDevTaskConfirm.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to delete dev task'
+    error.value = e?.message || t('requirement.errorDeleteFailed')
   }
 }
 
@@ -333,7 +335,7 @@ async function handleEditTc() {
     })
     showEditTcModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to update test case'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -348,7 +350,7 @@ async function handleDeleteTc() {
     await tcStore.remove(deleteTcId.value)
     showDeleteTcConfirm.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to delete test case'
+    error.value = e?.message || t('requirement.errorDeleteFailed')
   }
 }
 
@@ -376,7 +378,7 @@ onMounted(loadAll)
 <template>
   <div class="max-w-6xl mx-auto">
     <!-- Loading -->
-    <div v-if="loading" class="py-12 text-center text-gray-500">Loading...</div>
+    <div v-if="loading" class="py-12 text-center text-gray-500">{{ t('common.loading') }}</div>
 
     <!-- Error -->
     <div v-else-if="error" class="p-3 rounded-[10px] border border-red-200/60 bg-red-50 text-red-700 text-sm">
@@ -384,7 +386,7 @@ onMounted(loadAll)
     </div>
 
     <!-- Not found -->
-    <EmptyState v-else-if="!currentReq" title="Requirement not found" description="The requirement you are looking for does not exist." />
+    <EmptyState v-else-if="!currentReq" :title="t('requirement.requirementNotFound')" :description="t('requirement.requirementNotFoundDesc')" />
 
     <template v-else>
       <!-- Header -->
@@ -401,12 +403,12 @@ onMounted(loadAll)
           <h1 class="text-2xl font-bold text-gray-900">{{ currentReq.title }}</h1>
           <StatusBadge :status="currentReq.status" />
           <span :class="['badge-base', priorityColorMap[currentReq.priority] ?? 'bg-gradient-to-br from-gray-50 to-gray-100/50 text-gray-600 border-gray-200/60']">
-            {{ currentReq.priority.charAt(0).toUpperCase() + currentReq.priority.slice(1) }}
+            {{ t('priority.' + currentReq.priority) }}
           </span>
           <button
             class="text-sm text-gray-400 hover:text-gray-600 transition-colors ml-2"
             @click="openEditReqModal"
-            title="Edit requirement"
+            :title="t('requirement.editRequirement')"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -446,7 +448,7 @@ onMounted(loadAll)
             ]"
             @click="activeTab = tab"
           >
-            {{ tab === 'specs' ? 'Specifications' : tab === 'dev' ? 'Dev Tasks' : tab === 'test' ? 'Test Tasks' : 'Coverage' }}
+            {{ tab === 'specs' ? t('requirement.specifications') : tab === 'dev' ? t('requirement.devTasks') : tab === 'test' ? t('requirement.testTasks') : t('requirement.coverage') }}
           </button>
         </nav>
       </div>
@@ -454,20 +456,20 @@ onMounted(loadAll)
       <!-- Specifications Tab -->
       <div v-if="activeTab === 'specs'">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-gray-900">Specifications</h2>
+          <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.specifications') }}</h2>
           <button
             class="btn-primary"
             @click="openCreateSpecModal"
           >
-            Create Spec
+            {{ t('specification.createSpec') }}
           </button>
         </div>
 
         <EmptyState
           v-if="specStore.specs.length === 0"
-          title="No specifications"
-          description="Create a specification to define requirements in detail."
-          action-label="Create Spec"
+          :title="t('specification.noSpecs')"
+          :description="t('specification.noSpecsDesc')"
+          :action-label="t('specification.createSpec')"
           @action="openCreateSpecModal"
         />
 
@@ -483,7 +485,7 @@ onMounted(loadAll)
             >
               <div class="flex items-center gap-3">
                 <span :class="['badge-base', specTypeColorMap[spec.spec_type] ?? 'bg-gradient-to-br from-gray-50 to-gray-100/50 text-gray-600 border-gray-200/60']">
-                  {{ spec.spec_type.toUpperCase() }}
+                  {{ t('specType.' + spec.spec_type) }}
                 </span>
                 <span class="font-medium text-gray-900">{{ spec.title }}</span>
                 <span class="text-xs text-gray-500">v{{ spec.current_version }}</span>
@@ -493,7 +495,7 @@ onMounted(loadAll)
                   class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                   @click.stop="navigateToSpec(spec.id)"
                 >
-                  Open
+                  {{ t('common.view') }}
                 </button>
                 <svg
                   :class="['w-4 h-4 text-gray-400 transition-transform', expandedSpecId === spec.id ? 'rotate-180' : '']"
@@ -507,7 +509,7 @@ onMounted(loadAll)
             <!-- Expanded versions -->
             <div v-if="expandedSpecId === spec.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
               <div v-if="specStore.versions.filter(v => v.spec_id === spec.id).length === 0" class="text-sm text-gray-500">
-                No versions yet.
+                {{ t('specification.noVersions') }}
               </div>
               <div v-else class="space-y-2">
                 <div
@@ -516,7 +518,7 @@ onMounted(loadAll)
                   class="flex items-center justify-between py-1"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-700">Version {{ ver.version }}</span>
+                    <span class="text-sm text-gray-700">{{ t('specification.version', { n: ver.version }) }}</span>
                     <StatusBadge :status="ver.status" size="sm" />
                   </div>
                   <span class="text-xs text-gray-400">{{ formatDate(ver.created_at) }}</span>
@@ -530,20 +532,20 @@ onMounted(loadAll)
       <!-- Dev Tasks Tab -->
       <div v-if="activeTab === 'dev'">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-gray-900">Dev Tasks</h2>
+          <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.devTasks') }}</h2>
           <button
             class="btn-primary"
             @click="openCreateDevTaskModal"
           >
-            Create Dev Task
+            {{ t('task.createDevTask') }}
           </button>
         </div>
 
         <EmptyState
           v-if="devTasksForReq.length === 0"
-          title="No dev tasks"
-          description="Create a development task to start implementation."
-          action-label="Create Dev Task"
+          :title="t('task.noDevTasks')"
+          :description="t('task.noDevTasksDesc')"
+          :action-label="t('task.createDevTask')"
           @action="openCreateDevTaskModal"
         />
 
@@ -551,12 +553,12 @@ onMounted(loadAll)
           <table class="w-full text-sm">
             <thead class="border-b border-blue-500/5 bg-blue-500/[0.02]">
               <tr>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Title</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Status</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Assignee</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Est. Hours</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Created</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Actions</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.status') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('task.assignee') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('task.estHours') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.created') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-blue-500/5">
@@ -567,7 +569,7 @@ onMounted(loadAll)
               >
                 <td class="px-4 py-3 font-medium text-gray-900">{{ task.title }}</td>
                 <td class="px-4 py-3"><StatusBadge :status="task.status" size="sm" /></td>
-                <td class="px-4 py-3 text-gray-500">{{ task.assignee_id ?? 'Unassigned' }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ task.assignee_id ?? t('task.unassigned') }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ task.estimate_hours ?? '-' }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
                 <td class="px-4 py-3">
@@ -576,14 +578,14 @@ onMounted(loadAll)
                       class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                       @click="openEditDevTaskModal(task)"
                     >
-                      Edit
+                      {{ t('common.edit') }}
                     </button>
                     <button
                       v-if="task.status === 'open'"
                       class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
                       @click="openDeleteDevTaskConfirm(task)"
                     >
-                      Delete
+                      {{ t('common.delete') }}
                     </button>
                   </div>
                 </td>
@@ -596,20 +598,20 @@ onMounted(loadAll)
       <!-- Test Tasks Tab -->
       <div v-if="activeTab === 'test'">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-gray-900">Test Tasks</h2>
+          <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.testTasks') }}</h2>
           <button
             class="btn-primary"
             @click="openCreateTestTaskModal"
           >
-            Create Test Task
+            {{ t('task.createTestTask') }}
           </button>
         </div>
 
         <EmptyState
           v-if="testTasksForReq.length === 0"
-          title="No test tasks"
-          description="Create a test task to start verification."
-          action-label="Create Test Task"
+          :title="t('task.noTestTasks')"
+          :description="t('task.noTestTasksDesc')"
+          :action-label="t('task.createTestTask')"
           @action="openCreateTestTaskModal"
         />
 
@@ -638,7 +640,7 @@ onMounted(loadAll)
             <!-- Expanded test cases -->
             <div v-if="expandedTestTaskId === task.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
               <div v-if="tcStore.testCases.length === 0" class="text-sm text-gray-500">
-                No test cases yet.
+                {{ t('task.noTestCases') }}
               </div>
               <div v-else class="space-y-2">
                 <div
@@ -655,14 +657,14 @@ onMounted(loadAll)
                       class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                       @click.stop="openEditTcModal(tc)"
                     >
-                      Edit
+                      {{ t('common.edit') }}
                     </button>
                     <button
                       v-if="tc.status === 'pending'"
                       class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
                       @click.stop="openDeleteTcConfirm(tc)"
                     >
-                      Delete
+                      {{ t('common.delete') }}
                     </button>
                   </div>
                 </div>
@@ -675,7 +677,7 @@ onMounted(loadAll)
       <!-- Coverage Tab -->
       <div v-if="activeTab === 'coverage'">
         <div v-if="!coverageStore.report" class="py-12 text-center text-gray-500">
-          Loading coverage...
+          {{ t('coverage.loadingCoverage') }}
         </div>
 
         <template v-else>
@@ -683,11 +685,11 @@ onMounted(loadAll)
           <div class="grid grid-cols-3 gap-4 mb-6">
             <div class="glass-card p-5 text-center">
               <div class="text-2xl font-bold text-gray-900">{{ coverageStore.report.total_clauses }}</div>
-              <div class="text-sm text-gray-500 mt-1">Total Clauses</div>
+              <div class="text-sm text-gray-500 mt-1">{{ t('coverage.totalClauses') }}</div>
             </div>
             <div class="glass-card p-5 text-center">
               <div class="text-2xl font-bold text-green-600">{{ coverageStore.report.covered_clauses }}</div>
-              <div class="text-sm text-gray-500 mt-1">Covered</div>
+              <div class="text-sm text-gray-500 mt-1">{{ t('coverage.covered') }}</div>
             </div>
             <div class="glass-card p-5 text-center">
               <div class="text-2xl font-bold text-blue-600">
@@ -695,17 +697,17 @@ onMounted(loadAll)
                   ? Math.round((coverageStore.report.covered_clauses / coverageStore.report.total_clauses) * 100)
                   : 0 }}%
               </div>
-              <div class="text-sm text-gray-500 mt-1">Overall Coverage</div>
+              <div class="text-sm text-gray-500 mt-1">{{ t('coverage.overallCoverage') }}</div>
             </div>
           </div>
 
           <!-- Progress bars by severity -->
           <div class="glass-card p-4 mb-6">
-            <h3 class="text-sm font-bold text-gray-900 mb-3">Coverage by Severity</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-3">{{ t('coverage.coverageBySeverity') }}</h3>
             <div class="space-y-3">
               <div>
                 <div class="flex items-center justify-between text-sm mb-1">
-                  <span class="font-medium text-gray-700">MUST</span>
+                  <span class="font-medium text-gray-700">{{ t('severity.must') }}</span>
                   <span :class="coverageStore.report.must_coverage_pct === 100 ? 'text-green-600' : 'text-red-600'" class="font-medium">
                     {{ coverageStore.report.must_coverage_pct.toFixed(1) }}%
                   </span>
@@ -720,7 +722,7 @@ onMounted(loadAll)
               </div>
               <div>
                 <div class="flex items-center justify-between text-sm mb-1">
-                  <span class="font-medium text-gray-700">SHOULD</span>
+                  <span class="font-medium text-gray-700">{{ t('severity.should') }}</span>
                   <span :class="coverageStore.report.should_coverage_pct >= 80 ? 'text-green-600' : coverageStore.report.should_coverage_pct >= 50 ? 'text-yellow-600' : 'text-red-600'" class="font-medium">
                     {{ coverageStore.report.should_coverage_pct.toFixed(1) }}%
                   </span>
@@ -735,7 +737,7 @@ onMounted(loadAll)
               </div>
               <div>
                 <div class="flex items-center justify-between text-sm mb-1">
-                  <span class="font-medium text-gray-700">MAY</span>
+                  <span class="font-medium text-gray-700">{{ t('severity.may') }}</span>
                   <span class="text-gray-500 font-medium">
                     {{ coverageStore.report.may_coverage_pct.toFixed(1) }}%
                   </span>
@@ -753,15 +755,15 @@ onMounted(loadAll)
           <!-- Uncovered clauses table -->
           <div v-if="coverageStore.report.uncovered_clauses.length > 0" class="glass-card overflow-hidden">
             <div class="px-4 py-3 border-b border-blue-500/8">
-              <h3 class="text-sm font-bold text-gray-900">Uncovered Clauses</h3>
+              <h3 class="text-sm font-bold text-gray-900">{{ t('coverage.uncoveredClauses') }}</h3>
             </div>
             <table class="w-full text-sm">
               <thead class="border-b border-blue-500/5 bg-blue-500/[0.02]">
                 <tr>
-                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">Clause ID</th>
-                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">Title</th>
-                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">Severity</th>
-                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">Category</th>
+                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">{{ t('coverage.clauseId') }}</th>
+                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">{{ t('coverage.clauseTitle') }}</th>
+                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">{{ t('coverage.severity') }}</th>
+                  <th class="text-left px-4 py-2 text-xs font-semibold text-gray-500">{{ t('coverage.category') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-blue-500/5">
@@ -790,33 +792,33 @@ onMounted(loadAll)
 
           <EmptyState
             v-else
-            title="All clauses covered"
-            description="Every specification clause has associated test coverage."
+            :title="t('coverage.allClausesCovered')"
+            :description="t('coverage.allClausesCoveredDesc')"
           />
         </template>
       </div>
     </template>
 
     <!-- Create Spec Modal -->
-    <Modal :show="showCreateSpecModal" title="New Specification" @close="showCreateSpecModal = false">
+    <Modal :show="showCreateSpecModal" :title="t('specification.newSpecification')" @close="showCreateSpecModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="newSpecTitle"
             type="text"
-            placeholder="Specification title"
+            :placeholder="t('specification.specTitle')"
             class="input-glass"
             @keyup.enter="handleCreateSpec"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.type') }}</label>
           <select
             v-model="newSpecType"
             class="select-glass"
           >
-            <option v-for="t in specTypeOptions" :key="t" :value="t">{{ t.toUpperCase() }}</option>
+            <option v-for="opt in specTypeOptions" :key="opt" :value="opt">{{ t('specType.' + opt) }}</option>
           </select>
         </div>
       </div>
@@ -825,47 +827,47 @@ onMounted(loadAll)
           class="btn-secondary"
           @click="showCreateSpecModal = false"
         >
-          Cancel
+          {{ t('common.cancel') }}
         </button>
         <button
           class="btn-primary"
           :disabled="!newSpecTitle.trim()"
           @click="handleCreateSpec"
         >
-          Create
+          {{ t('common.create') }}
         </button>
       </div>
     </Modal>
 
     <!-- Create Dev Task Modal -->
-    <Modal :show="showCreateDevTaskModal" title="New Dev Task" @close="showCreateDevTaskModal = false">
+    <Modal :show="showCreateDevTaskModal" :title="t('task.newDevTask')" @close="showCreateDevTaskModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="newDevTaskTitle"
             type="text"
-            placeholder="Dev task title"
+            :placeholder="t('task.devTaskTitle')"
             class="input-glass"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Spec Version</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('task.specVersion') }}</label>
           <select
             v-model="newDevTaskSpecVersionId"
             class="select-glass"
           >
-            <option value="">Select version</option>
+            <option value="">{{ t('task.selectVersion') }}</option>
             <option v-for="sv in allSpecVersions" :key="sv.id" :value="sv.id">{{ sv.label }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Estimate Hours</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('task.estimateHours') }}</label>
           <input
             v-model.number="newDevTaskEstimate"
             type="number"
             min="0"
-            placeholder="Optional"
+            :placeholder="t('task.optional')"
             class="input-glass"
           />
         </div>
@@ -875,27 +877,27 @@ onMounted(loadAll)
           class="btn-secondary"
           @click="showCreateDevTaskModal = false"
         >
-          Cancel
+          {{ t('common.cancel') }}
         </button>
         <button
           class="btn-primary"
           :disabled="!newDevTaskTitle.trim() || !newDevTaskSpecVersionId"
           @click="handleCreateDevTask"
         >
-          Create
+          {{ t('common.create') }}
         </button>
       </div>
     </Modal>
 
     <!-- Create Test Task Modal -->
-    <Modal :show="showCreateTestTaskModal" title="New Test Task" @close="showCreateTestTaskModal = false">
+    <Modal :show="showCreateTestTaskModal" :title="t('task.newTestTask')" @close="showCreateTestTaskModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="newTestTaskTitle"
             type="text"
-            placeholder="Test task title"
+            :placeholder="t('task.testTaskTitle')"
             class="input-glass"
             @keyup.enter="handleCreateTestTask"
           />
@@ -906,151 +908,149 @@ onMounted(loadAll)
           class="btn-secondary"
           @click="showCreateTestTaskModal = false"
         >
-          Cancel
+          {{ t('common.cancel') }}
         </button>
         <button
           class="btn-primary"
           :disabled="!newTestTaskTitle.trim()"
           @click="handleCreateTestTask"
         >
-          Create
+          {{ t('common.create') }}
         </button>
       </div>
     </Modal>
 
     <!-- Edit Requirement Modal -->
-    <Modal :show="showEditReqModal" title="Edit Requirement" @close="showEditReqModal = false">
+    <Modal :show="showEditReqModal" :title="t('requirement.editRequirement')" @close="showEditReqModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="editReqTitle"
             type="text"
-            placeholder="Requirement title"
+            :placeholder="t('requirement.requirementTitle')"
             class="input-glass"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.priority') }}</label>
           <select v-model="editReqPriority" class="select-glass">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
+            <option value="low">{{ t('priority.low') }}</option>
+            <option value="medium">{{ t('priority.medium') }}</option>
+            <option value="high">{{ t('priority.high') }}</option>
+            <option value="critical">{{ t('priority.critical') }}</option>
           </select>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditReqModal = false">Cancel</button>
-        <button class="btn-primary" :disabled="!editReqTitle.trim()" @click="handleEditReq">Save</button>
+        <button class="btn-secondary" @click="showEditReqModal = false">{{ t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="!editReqTitle.trim()" @click="handleEditReq">{{ t('common.save') }}</button>
       </div>
     </Modal>
 
     <!-- Edit Dev Task Modal -->
-    <Modal :show="showEditDevTaskModal" title="Edit Dev Task" @close="showEditDevTaskModal = false">
+    <Modal :show="showEditDevTaskModal" :title="t('task.editDevTask')" @close="showEditDevTaskModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="editDevTaskTitle"
             type="text"
-            placeholder="Dev task title"
+            :placeholder="t('task.devTaskTitle')"
             class="input-glass"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Estimate Hours</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('task.estimateHours') }}</label>
           <input
             v-model.number="editDevTaskEstimate"
             type="number"
             min="0"
-            placeholder="Optional"
+            :placeholder="t('task.optional')"
             class="input-glass"
           />
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditDevTaskModal = false">Cancel</button>
-        <button class="btn-primary" :disabled="!editDevTaskTitle.trim()" @click="handleEditDevTask">Save</button>
+        <button class="btn-secondary" @click="showEditDevTaskModal = false">{{ t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="!editDevTaskTitle.trim()" @click="handleEditDevTask">{{ t('common.save') }}</button>
       </div>
     </Modal>
 
     <!-- Delete Dev Task Confirmation -->
-    <Modal :show="showDeleteDevTaskConfirm" title="Delete Dev Task" @close="showDeleteDevTaskConfirm = false">
+    <Modal :show="showDeleteDevTaskConfirm" :title="t('task.deleteDevTask')" @close="showDeleteDevTaskConfirm = false">
       <p class="text-sm text-gray-600">
-        Are you sure you want to delete <span class="font-semibold">{{ deleteDevTaskTitle }}</span
-        >? This action cannot be undone.
+        {{ t('task.deleteDevTaskConfirm', { title: deleteDevTaskTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteDevTaskConfirm = false">Cancel</button>
-        <button class="btn-danger" @click="handleDeleteDevTask">Delete</button>
+        <button class="btn-secondary" @click="showDeleteDevTaskConfirm = false">{{ t('common.cancel') }}</button>
+        <button class="btn-danger" @click="handleDeleteDevTask">{{ t('common.delete') }}</button>
       </div>
     </Modal>
 
     <!-- Edit Test Case Modal -->
-    <Modal :show="showEditTcModal" title="Edit Test Case" @close="showEditTcModal = false">
+    <Modal :show="showEditTcModal" :title="t('testcase.editTestCase')" @close="showEditTcModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="editTcTitle"
             type="text"
-            placeholder="Test case title"
+            :placeholder="t('testcase.testCaseTitle')"
             class="input-glass"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Preconditions</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.preconditions') }}</label>
           <textarea
             v-model="editTcPreconditions"
-            placeholder="Optional preconditions"
+            :placeholder="t('testcase.preconditionsPlaceholder')"
             class="input-glass"
             rows="2"
           ></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Steps</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.steps') }}</label>
           <textarea
             v-model="editTcSteps"
-            placeholder="Test steps"
+            :placeholder="t('testcase.stepsPlaceholder')"
             class="input-glass"
             rows="3"
           ></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Expected Result</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.expectedResult') }}</label>
           <textarea
             v-model="editTcExpected"
-            placeholder="Expected result"
+            :placeholder="t('testcase.expectedResultPlaceholder')"
             class="input-glass"
             rows="2"
           ></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Actual Result</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.actualResult') }}</label>
           <textarea
             v-model="editTcActual"
-            placeholder="Optional actual result"
+            :placeholder="t('testcase.actualResultPlaceholder')"
             class="input-glass"
             rows="2"
           ></textarea>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditTcModal = false">Cancel</button>
-        <button class="btn-primary" :disabled="!editTcTitle.trim()" @click="handleEditTc">Save</button>
+        <button class="btn-secondary" @click="showEditTcModal = false">{{ t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="!editTcTitle.trim()" @click="handleEditTc">{{ t('common.save') }}</button>
       </div>
     </Modal>
 
     <!-- Delete Test Case Confirmation -->
-    <Modal :show="showDeleteTcConfirm" title="Delete Test Case" @close="showDeleteTcConfirm = false">
+    <Modal :show="showDeleteTcConfirm" :title="t('testcase.deleteTestCase')" @close="showDeleteTcConfirm = false">
       <p class="text-sm text-gray-600">
-        Are you sure you want to delete <span class="font-semibold">{{ deleteTcTitle }}</span
-        >? This action cannot be undone.
+        {{ t('testcase.deleteTestCaseConfirm', { title: deleteTcTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteTcConfirm = false">Cancel</button>
-        <button class="btn-danger" @click="handleDeleteTc">Delete</button>
+        <button class="btn-secondary" @click="showDeleteTcConfirm = false">{{ t('common.cancel') }}</button>
+        <button class="btn-danger" @click="handleDeleteTc">{{ t('common.delete') }}</button>
       </div>
     </Modal>
   </div>
