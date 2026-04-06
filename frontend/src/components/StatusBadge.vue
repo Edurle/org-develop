@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   status: string
@@ -39,15 +42,13 @@ const sizeClass = computed(() =>
     : 'px-2.5 py-1 text-[11px]'
 )
 
-function formatLabel(status: string): string {
-  return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
+
 </script>
 
 <template>
   <span
     :class="['inline-flex items-center rounded-full font-semibold border', style.bg, style.text, style.border, sizeClass]"
   >
-    {{ formatLabel(status) }}
+    {{ t(`status.${status}`) }}
   </span>
 </template>
