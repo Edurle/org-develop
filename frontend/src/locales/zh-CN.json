@@ -104,6 +104,9 @@
     "general": "通用",
     "team": "团队",
     "security": "安全",
+    "subtitle": "跨团队管理您的项目。",
+    "selectTeam": "选择团队",
+    "errorTeamRequired": "请选择一个团队。",
     "noProjectsYet": "暂无项目",
     "noProjectsYetDesc": "创建您的第一个项目以开始管理需求和任务。"
   },
@@ -144,7 +147,11 @@
     "testTasks": "测试任务",
     "coverage": "覆盖率",
     "requirementNotFound": "需求未找到",
-    "requirementNotFoundDesc": "您查找的需求不存在。"
+    "requirementNotFoundDesc": "您查找的需求不存在。",
+    "errorLoadFailed": "加载需求失败",
+    "errorCreateFailed": "创建需求失败",
+    "errorUpdateFailed": "更新需求失败",
+    "errorDeleteFailed": "删除需求失败"
   },
   "specification": {
     "title": "规格说明",
@@ -172,13 +179,27 @@
     "noClausesDesc": "添加条款以定义此版本中的具体需求。",
     "deleteClause": "删除条款",
     "deleteClauseConfirm": "确定要删除条款「{title}」吗？",
-    "specNotFound": "规格说明未找到"
+    "noSpecs": "暂无规格说明",
+    "noSpecsDesc": "创建规格说明以详细定义需求。",
+    "newSpecification": "新建规格说明",
+    "specNotFound": "规格说明未找到",
+    "errorInvalidJson": "无效的 JSON 内容",
+    "errorLockFailed": "锁定版本失败",
+    "errorRejectFailed": "驳回版本失败",
+    "errorCreateClause": "创建条款失败",
+    "errorUpdateClause": "更新条款失败",
+    "errorDeleteClause": "删除条款失败",
+    "errorLoadFailed": "加载规格说明失败",
+    "category": "类别",
+    "severityLabel": "严重程度"
   },
   "task": {
     "createDevTask": "创建开发任务",
     "editDevTask": "编辑开发任务",
     "deleteDevTask": "删除开发任务",
     "deleteDevTaskConfirm": "确定要删除「{title}」吗？",
+    "newDevTask": "新建开发任务",
+    "newTestTask": "新建测试任务",
     "devTaskTitle": "开发任务标题",
     "specVersion": "规格版本",
     "selectVersion": "选择版本",
@@ -198,6 +219,8 @@
   },
   "testcase": {
     "editTestCase": "编辑测试用例",
+    "deleteTestCase": "删除测试用例",
+    "deleteTestCaseConfirm": "确定要删除「{title}」吗？此操作无法撤销。",
     "testCaseTitle": "测试用例标题",
     "preconditions": "前置条件",
     "preconditionsPlaceholder": "可选前置条件",
@@ -210,15 +233,22 @@
   },
   "coverage": {
     "title": "覆盖率",
+    "reportTitle": "覆盖率报告",
     "totalClauses": "条款总数",
     "covered": "已覆盖",
     "overallCoverage": "总覆盖率",
     "coverageBySeverity": "按严重程度统计覆盖率",
     "uncoveredClauses": "未覆盖条款",
     "clauseId": "条款 ID",
+    "severity": "严重程度",
+    "category": "类别",
     "allClausesCovered": "所有条款已覆盖",
     "allClausesCoveredDesc": "每个规格条款都有对应的测试覆盖。",
-    "loadingCoverage": "加载覆盖率..."
+    "loadingCoverage": "加载覆盖率...",
+    "loadFailed": "加载覆盖率报告失败",
+    "mustRequired": "要求 100% -- 任何缺口都是风险",
+    "shouldTarget": "目标 >= 80%，低于 50% 为警告",
+    "mayInfo": "不强制 -- 仅供参考"
   },
   "status": {
     "draft": "草稿",

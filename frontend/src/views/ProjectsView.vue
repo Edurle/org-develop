@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import { teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
@@ -8,6 +9,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import type { Team } from '@/types'
 
 const router = useRouter()
+const { t } = useI18n()
 const projectStore = useProjectStore()
 
 const loading = ref(true)
@@ -46,11 +48,11 @@ async function handleCreate() {
   try {
     const slug = form.value.slug || slugFromName.value
     if (!form.value.name.trim()) {
-      createError.value = 'Project name is required.'
+      createError.value = t('project.errorNameRequired')
       return
     }
     if (!form.value.team_id) {
-      createError.value = 'Please select a team.'
+      createError.value = t('project.errorTeamRequired')
       return
     }
     const project = await projectStore.create({
@@ -62,7 +64,7 @@ async function handleCreate() {
     showNewModal.value = false
     router.push({ name: 'project-detail', params: { id: project.id } })
   } catch (err: any) {
-    createError.value = err?.response?.data?.detail || err?.message || 'Failed to create project.'
+    createError.value = err?.response?.data?.detail || err?.message || t('project.errorCreateFailed')
   } finally {
     creating.value = false
   }
@@ -91,11 +93,11 @@ onMounted(async () => {
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold text-gray-900">Projects</h1>
-        <p class="mt-1 text-sm text-gray-500">Manage your projects across teams.</p>
+        <h1 class="text-xl font-bold text-gray-900">{{ t('project.title') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ t('project.subtitle') }}</p>
       </div>
       <button class="btn-primary px-5 py-2.5 text-sm" @click="openNewModal">
-        + New Project
+        + {{ t('project.newProject') }}
       </button>
     </div>
 
@@ -112,9 +114,9 @@ onMounted(async () => {
     <!-- Empty state -->
     <EmptyState
       v-else-if="projectStore.projects.length === 0"
-      title="No projects yet"
-      description="Create your first project to get started with requirements and tasks."
-      action-label="New Project"
+      :title="t('project.noProjectsYet')"
+      :description="t('project.noProjectsYetDesc')"
+      :action-label="t('project.newProject')"
       @action="openNewModal"
     />
 
@@ -146,35 +148,35 @@ onMounted(async () => {
     </div>
 
     <!-- New Project Modal -->
-    <Modal :show="showNewModal" title="New Project" @close="showNewModal = false">
+    <Modal :show="showNewModal" :title="t('project.newProject')" @close="showNewModal = false">
       <form @submit.prevent="handleCreate" class="space-y-4">
         <div v-if="createError" class="p-3 bg-red-50 border border-red-200/60 rounded-[10px] text-sm text-red-700">
           {{ createError }}
         </div>
         <div>
-          <label for="proj-name" class="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
-          <input id="proj-name" v-model="form.name" type="text" required class="input-glass" placeholder="My Project" />
+          <label for="proj-name" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.name') }}</label>
+          <input id="proj-name" v-model="form.name" type="text" required class="input-glass" :placeholder="t('project.projectName')" />
         </div>
         <div>
-          <label for="proj-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">Slug</label>
+          <label for="proj-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.slug') }}</label>
           <input id="proj-slug" v-model="form.slug" type="text" :placeholder="slugFromName || 'auto-generated-from-name'" class="input-glass" />
-          <p class="mt-1 text-[11px] text-gray-400">Leave empty to auto-generate from name.</p>
+          <p class="mt-1 text-[11px] text-gray-400">{{ t('common.autoSlug') }}</p>
         </div>
         <div>
-          <label for="proj-desc" class="block text-xs font-semibold text-gray-600 mb-1.5">Description</label>
-          <textarea id="proj-desc" v-model="form.description" rows="3" class="input-glass resize-none" placeholder="Optional project description..." />
+          <label for="proj-desc" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.description') }}</label>
+          <textarea id="proj-desc" v-model="form.description" rows="3" class="input-glass resize-none" :placeholder="t('project.projectDescription')" />
         </div>
         <div>
-          <label for="proj-team" class="block text-xs font-semibold text-gray-600 mb-1.5">Team</label>
+          <label for="proj-team" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.team') }}</label>
           <select id="proj-team" v-model="form.team_id" required class="select-glass">
-            <option value="" disabled>Select a team</option>
+            <option value="" disabled>{{ t('project.selectTeam') }}</option>
             <option v-for="team in teams" :key="team.id" :value="team.id">{{ team.name }}</option>
           </select>
         </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button type="button" class="btn-secondary px-4 py-2 text-sm" @click="showNewModal = false">Cancel</button>
+          <button type="button" class="btn-secondary px-4 py-2 text-sm" @click="showNewModal = false">{{ t('common.cancel') }}</button>
           <button type="submit" :disabled="creating" class="btn-primary px-5 py-2 text-sm">
-            {{ creating ? 'Creating...' : 'Create Project' }}
+            {{ creating ? t('common.creating') : t('project.createProject') }}
           </button>
         </div>
       </form>
