@@ -45,3 +45,9 @@ coverage/
 
 # Build
 *.pyc
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Playwright MCP
+.playwright-mcp/
