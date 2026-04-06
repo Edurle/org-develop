@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useRequirementStore } from '@/stores/requirement'
 import { useIterationStore } from '@/stores/iteration'
 import StatusBadge from '@/components/StatusBadge.vue'
@@ -10,6 +11,7 @@ import type { Priority, Requirement } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const reqStore = useRequirementStore()
 const iterStore = useIterationStore()
 
@@ -75,7 +77,7 @@ async function loadData() {
       iterStore.fetchList(projectId.value),
     ])
   } catch (e: any) {
-    error.value = e?.message || 'Failed to load requirements'
+    error.value = e?.message || t('requirement.errorLoadFailed')
   } finally {
     loading.value = false
   }
@@ -98,7 +100,7 @@ async function handleCreate() {
     })
     showCreateModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to create requirement'
+    error.value = e?.message || t('requirement.errorCreateFailed')
   }
 }
 
@@ -118,7 +120,7 @@ async function handleEdit() {
     })
     showEditModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to update requirement'
+    error.value = e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -133,7 +135,7 @@ async function handleDelete() {
     await reqStore.remove(deleteTargetId.value)
     showDeleteConfirm.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to delete requirement'
+    error.value = e?.message || t('requirement.errorDeleteFailed')
   }
 }
 
@@ -155,12 +157,12 @@ onMounted(loadData)
   <div class="max-w-6xl mx-auto">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Requirements</h1>
+      <h1 class="text-2xl font-bold text-gray-900">{{ t('requirement.title') }}</h1>
       <button
         class="btn-primary px-5 py-2.5 text-sm"
         @click="openCreateModal"
       >
-        New Requirement
+        {{ t('requirement.newRequirement') }}
       </button>
     </div>
 
@@ -177,8 +179,8 @@ onMounted(loadData)
         class="select-glass !w-auto"
         @change="applyFilters"
       >
-        <option value="">All Statuses</option>
-        <option v-for="s in statusOptions" :key="s" :value="s">{{ s.replace(/_/g, ' ') }}</option>
+        <option value="">{{ t('requirement.allStatuses') }}</option>
+        <option v-for="s in statusOptions" :key="s" :value="s">{{ t('status.' + s) }}</option>
       </select>
 
       <select
@@ -186,7 +188,7 @@ onMounted(loadData)
         class="select-glass !w-auto"
         @change="applyFilters"
       >
-        <option value="">All Iterations</option>
+        <option value="">{{ t('requirement.allIterations') }}</option>
         <option v-for="iter in iterStore.iterations" :key="iter.id" :value="iter.id">{{ iter.name }}</option>
       </select>
 
@@ -194,34 +196,34 @@ onMounted(loadData)
         v-model="priorityFilter"
         class="select-glass !w-auto"
       >
-        <option value="">All Priorities</option>
-        <option v-for="p in priorityOptions" :key="p" :value="p">{{ p.charAt(0).toUpperCase() + p.slice(1) }}</option>
+        <option value="">{{ t('requirement.allPriorities') }}</option>
+        <option v-for="p in priorityOptions" :key="p" :value="p">{{ t('priority.' + p) }}</option>
       </select>
 
       <button
         class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
         @click="statusFilter = ''; iterationFilter = ''; priorityFilter = ''; applyFilters()"
       >
-        Clear Filters
+        {{ t('common.clearFilters') }}
       </button>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="py-12 text-center text-gray-500">Loading...</div>
+    <div v-if="loading" class="py-12 text-center text-gray-500">{{ t('common.loading') }}</div>
 
     <!-- Empty state -->
     <EmptyState
       v-else-if="reqStore.requirements.length === 0"
-      title="No requirements yet"
-      description="Create your first requirement to get started."
-      action-label="New Requirement"
+      :title="t('requirement.noRequirements')"
+      :description="t('requirement.noRequirementsDesc')"
+      :action-label="t('requirement.newRequirement')"
       @action="openCreateModal"
     />
 
     <EmptyState
       v-else-if="filteredRequirements.length === 0"
-      title="No matching requirements"
-      description="Try adjusting your filters."
+      :title="t('requirement.noMatchingRequirements')"
+      :description="t('requirement.noMatchingRequirementsDesc')"
     />
 
     <!-- Table -->
@@ -229,12 +231,12 @@ onMounted(loadData)
       <table class="w-full text-sm">
         <thead class="border-b border-blue-500/5 bg-blue-500/[0.02]">
           <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Title</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Priority</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Status</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Iteration</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Created</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Actions</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.priority') }}</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.status') }}</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('iteration.title') }}</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.created') }}</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">{{ t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-blue-500/5">
@@ -247,7 +249,7 @@ onMounted(loadData)
             <td class="px-4 py-3 font-medium text-gray-900">{{ req.title }}</td>
             <td class="px-4 py-3">
               <span :class="['badge-base', priorityColorMap[req.priority] ?? 'bg-gradient-to-br from-gray-50 to-gray-100/50 text-gray-600 border-gray-200/60']">
-                {{ req.priority.charAt(0).toUpperCase() + req.priority.slice(1) }}
+                {{ t('priority.' + req.priority) }}
               </span>
             </td>
             <td class="px-4 py-3">
@@ -263,20 +265,20 @@ onMounted(loadData)
                   class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors"
                   @click.stop="navigateToReq(req.id)"
                 >
-                  View
+                  {{ t('common.view') }}
                 </button>
                 <button
                   class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors"
                   @click.stop="openEditModal(req)"
                 >
-                  Edit
+                  {{ t('common.edit') }}
                 </button>
                 <button
                   v-if="req.status === 'draft' || req.status === 'cancelled'"
                   class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors"
                   @click.stop="openDeleteConfirm(req)"
                 >
-                  Delete
+                  {{ t('common.delete') }}
                 </button>
               </div>
             </td>
@@ -286,33 +288,33 @@ onMounted(loadData)
     </div>
 
     <!-- Create Requirement Modal -->
-    <Modal :show="showCreateModal" title="New Requirement" @close="showCreateModal = false">
+    <Modal :show="showCreateModal" :title="t('requirement.newRequirement')" @close="showCreateModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             id="req-title"
             v-model="newTitle"
             type="text"
-            placeholder="Requirement title"
+            :placeholder="t('requirement.requirementTitle')"
             class="input-glass"
             @keyup.enter="handleCreate"
           />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.priority') }}</label>
           <select
             id="req-priority"
             v-model="newPriority"
             class="select-glass"
           >
-            <option v-for="p in priorityOptions" :key="p" :value="p">{{ p.charAt(0).toUpperCase() + p.slice(1) }}</option>
+            <option v-for="p in priorityOptions" :key="p" :value="p">{{ t('priority.' + p) }}</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Iteration</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('iteration.title') }}</label>
           <select
             id="req-iteration"
             v-model="newIterationId"
@@ -328,53 +330,52 @@ onMounted(loadData)
           class="btn-secondary"
           @click="showCreateModal = false"
         >
-          Cancel
+          {{ t('common.cancel') }}
         </button>
         <button
           class="btn-primary"
           :disabled="!newTitle.trim() || !newIterationId"
           @click="handleCreate"
         >
-          Create
+          {{ t('common.create') }}
         </button>
       </div>
     </Modal>
 
     <!-- Edit Requirement Modal -->
-    <Modal :show="showEditModal" title="Edit Requirement" @close="showEditModal = false">
+    <Modal :show="showEditModal" :title="t('requirement.editRequirement')" @close="showEditModal = false">
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
           <input
             v-model="editTitle"
             type="text"
-            placeholder="Requirement title"
+            :placeholder="t('requirement.requirementTitle')"
             class="input-glass"
             @keyup.enter="handleEdit"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.priority') }}</label>
           <select v-model="editPriority" class="select-glass">
-            <option v-for="p in priorityOptions" :key="p" :value="p">{{ p.charAt(0).toUpperCase() + p.slice(1) }}</option>
+            <option v-for="p in priorityOptions" :key="p" :value="p">{{ t('priority.' + p) }}</option>
           </select>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditModal = false">Cancel</button>
-        <button class="btn-primary" :disabled="!editTitle.trim()" @click="handleEdit">Save</button>
+        <button class="btn-secondary" @click="showEditModal = false">{{ t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="!editTitle.trim()" @click="handleEdit">{{ t('common.save') }}</button>
       </div>
     </Modal>
 
     <!-- Delete Confirmation Modal -->
-    <Modal :show="showDeleteConfirm" title="Delete Requirement" @close="showDeleteConfirm = false">
+    <Modal :show="showDeleteConfirm" :title="t('requirement.deleteRequirement')" @close="showDeleteConfirm = false">
       <p class="text-sm text-gray-600">
-        Are you sure you want to delete <span class="font-semibold text-gray-900">{{ deleteTargetTitle }}</span>?
-        This action cannot be undone.
+        {{ t('requirement.deleteConfirmText', { title: deleteTargetTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteConfirm = false">Cancel</button>
-        <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDelete">Delete</button>
+        <button class="btn-secondary" @click="showDeleteConfirm = false">{{ t('common.cancel') }}</button>
+        <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDelete">{{ t('common.delete') }}</button>
       </div>
     </Modal>
   </div>
