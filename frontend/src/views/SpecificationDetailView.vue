@@ -293,8 +293,8 @@ onMounted(loadAll)
                 <td class="px-5 py-3">
                   <template v-if="specStore.currentVersion?.status === 'draft'">
                     <div class="flex items-center gap-2">
-                      <button class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors" @click="openEditClauseModal(clause)">{{ t('common.edit') }}</button>
-                      <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors" @click="openDeleteClauseConfirm(clause)">{{ t('common.delete') }}</button>
+                      <button class="text-gray-500 hover:text-gray-700 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all" @click="openEditClauseModal(clause)">{{ t('common.edit') }}</button>
+                      <button class="text-red-500 hover:text-red-700 text-xs font-medium bg-red-500/10 border border-red-500/15 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all" @click="openDeleteClauseConfirm(clause)">{{ t('common.delete') }}</button>
                     </div>
                   </template>
                 </td>

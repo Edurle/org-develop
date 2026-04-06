@@ -66,7 +66,7 @@ async function handleLogout() {
       <!-- Right: User -->
       <div class="ml-auto flex items-center gap-3">
         <button
-          class="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+          class="text-xs text-gray-400 hover:text-gray-600 transition-all px-2.5 py-1 rounded-full bg-white/40 border border-white/30 backdrop-blur-sm hover:bg-white/60"
           @click="toggleLocale"
         >
           {{ currentLocale() === 'en' ? '中文' : 'EN' }}
@@ -76,7 +76,7 @@ async function handleLogout() {
         </div>
         <span class="text-sm text-gray-600">{{ authStore.username || 'User' }}</span>
         <button
-          class="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-2"
+          class="text-xs text-gray-400 hover:text-gray-600 transition-all ml-2 bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm hover:bg-white/60"
           @click="handleLogout"
         >
           {{ $t('common.logout') }}

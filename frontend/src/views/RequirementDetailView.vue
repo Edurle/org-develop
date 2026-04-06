@@ -492,7 +492,7 @@ onMounted(loadAll)
               </div>
               <div class="flex items-center gap-2">
                 <button
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                   @click.stop="navigateToSpec(spec.id)"
                 >
                   {{ t('common.view') }}
@@ -575,14 +575,14 @@ onMounted(loadAll)
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
                     <button
-                      class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                       @click="openEditDevTaskModal(task)"
                     >
                       {{ t('common.edit') }}
                     </button>
                     <button
                       v-if="task.status === 'open'"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+                      class="text-sm text-red-600 hover:text-red-800 font-medium bg-red-500/10 border border-red-500/15 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                       @click="openDeleteDevTaskConfirm(task)"
                     >
                       {{ t('common.delete') }}
@@ -654,14 +654,14 @@ onMounted(loadAll)
                   </div>
                   <div class="flex items-center gap-2">
                     <button
-                      class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                       @click.stop="openEditTcModal(tc)"
                     >
                       {{ t('common.edit') }}
                     </button>
                     <button
                       v-if="tc.status === 'pending'"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+                      class="text-sm text-red-600 hover:text-red-800 font-medium bg-red-500/10 border border-red-500/15 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                       @click.stop="openDeleteTcConfirm(tc)"
                     >
                       {{ t('common.delete') }}

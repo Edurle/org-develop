@@ -262,20 +262,20 @@ onMounted(loadData)
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
                 <button
-                  class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors"
+                  class="text-blue-600 hover:text-blue-800 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
                   @click.stop="navigateToReq(req.id)"
                 >
                   {{ t('common.view') }}
                 </button>
                 <button
-                  class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors"
+                  class="text-gray-500 hover:text-gray-700 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
                   @click.stop="openEditModal(req)"
                 >
                   {{ t('common.edit') }}
                 </button>
                 <button
                   v-if="req.status === 'draft' || req.status === 'cancelled'"
-                  class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors"
+                  class="text-red-500 hover:text-red-700 text-xs font-medium bg-red-500/10 border border-red-500/15 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
                   @click.stop="openDeleteConfirm(req)"
                 >
                   {{ t('common.delete') }}

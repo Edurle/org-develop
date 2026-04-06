@@ -192,7 +192,7 @@ onMounted(loadData)
               <td class="px-5 py-3">
                 <router-link
                   :to="`/projects/${projectId}/requirements/${task.requirement_id}`"
-                  class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
                 >
                   {{ task.requirement_id }}
                 </router-link>
