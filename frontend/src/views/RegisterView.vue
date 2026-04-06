@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -22,15 +25,15 @@ async function handleRegister() {
   error.value = ''
 
   if (!username.value || !email.value || !password.value) {
-    error.value = 'All fields are required.'
+    error.value = t('auth.errorAllFieldsRequired')
     return
   }
   if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match.'
+    error.value = t('auth.errorPasswordMismatch')
     return
   }
   if (password.value.length < 6) {
-    error.value = 'Password must be at least 6 characters.'
+    error.value = t('auth.errorPasswordMin')
     return
   }
 
@@ -46,9 +49,9 @@ async function handleRegister() {
   } catch (err: any) {
     const detail = err?.response?.data?.detail
     if (typeof detail === 'string' && detail.includes('already')) {
-      error.value = 'Username or email already exists.'
+      error.value = t('auth.errorUserExists')
     } else {
-      error.value = detail || err?.message || 'Registration failed. Please try again.'
+      error.value = detail || err?.message || t('auth.errorRegisterFailed')
     }
   } finally {
     loading.value = false
@@ -83,7 +86,7 @@ async function handleRegister() {
           </svg>
         </div>
         <h1 class="text-xl font-bold text-white">OrgDev</h1>
-        <p class="text-sm text-white/50 mt-1">Create your account</p>
+        <p class="text-sm text-white/50 mt-1">{{ t('auth.createYourAccount') }}</p>
       </div>
 
       <!-- Error message -->
@@ -98,7 +101,7 @@ async function handleRegister() {
       <form @submit.prevent="handleRegister" class="space-y-4">
         <div>
           <label for="username" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Username <span class="text-red-400">*</span>
+            {{ t('auth.username') }} <span class="text-red-400">*</span>
           </label>
           <input
             id="username"
@@ -107,13 +110,13 @@ async function handleRegister() {
             autocomplete="username"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="Choose a username"
+            :placeholder="t('auth.chooseUsername')"
           />
         </div>
 
         <div>
           <label for="email" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Email <span class="text-red-400">*</span>
+            {{ t('auth.email') }} <span class="text-red-400">*</span>
           </label>
           <input
             id="email"
@@ -122,13 +125,13 @@ async function handleRegister() {
             autocomplete="email"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="you@example.com"
+            :placeholder="t('auth.emailPlaceholder')"
           />
         </div>
 
         <div>
           <label for="display-name" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Display Name
+            {{ t('auth.displayName') }}
           </label>
           <input
             id="display-name"
@@ -136,13 +139,13 @@ async function handleRegister() {
             type="text"
             autocomplete="name"
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="How should we call you?"
+            :placeholder="t('auth.displayNamePlaceholder')"
           />
         </div>
 
         <div>
           <label for="password" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Password <span class="text-red-400">*</span>
+            {{ t('auth.password') }} <span class="text-red-400">*</span>
           </label>
           <input
             id="password"
@@ -151,13 +154,13 @@ async function handleRegister() {
             autocomplete="new-password"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="At least 6 characters"
+            :placeholder="t('auth.passwordMin')"
           />
         </div>
 
         <div>
           <label for="confirm-password" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Confirm Password <span class="text-red-400">*</span>
+            {{ t('auth.confirmPassword') }} <span class="text-red-400">*</span>
           </label>
           <input
             id="confirm-password"
@@ -167,9 +170,9 @@ async function handleRegister() {
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
             :class="{ '!border-red-400/40': passwordMismatch }"
-            placeholder="Repeat your password"
+            :placeholder="t('auth.repeatPassword')"
           />
-          <p v-if="passwordMismatch" class="mt-1 text-xs text-red-300">Passwords do not match</p>
+          <p v-if="passwordMismatch" class="mt-1 text-xs text-red-300">{{ t('auth.passwordMismatch') }}</p>
         </div>
 
         <button
@@ -186,15 +189,15 @@ async function handleRegister() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          {{ loading ? 'Creating account...' : 'Create account' }}
+          {{ loading ? t('auth.creatingAccount') : t('auth.createAccount') }}
         </button>
       </form>
 
       <!-- Link to login -->
       <p class="mt-6 text-center text-sm text-white/40">
-        Already have an account?
+        {{ t('auth.alreadyHaveAccount') }}
         <router-link to="/login" class="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-          Sign in
+          {{ t('auth.signIn') }}
         </router-link>
       </p>
     </div>

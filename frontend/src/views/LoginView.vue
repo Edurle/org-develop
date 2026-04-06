@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const route = useRoute()
@@ -20,7 +23,7 @@ async function handleLogin() {
     const redirect = (route.query.redirect as string) || '/'
     router.push(redirect)
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || err?.message || 'Login failed. Please check your credentials.'
+    error.value = err?.response?.data?.detail || err?.message || t('auth.errorLoginFailed')
   } finally {
     loading.value = false
   }
@@ -54,7 +57,7 @@ async function handleLogin() {
           </svg>
         </div>
         <h1 class="text-xl font-bold text-white">OrgDev</h1>
-        <p class="text-sm text-white/50 mt-1">Sign in to your account</p>
+        <p class="text-sm text-white/50 mt-1">{{ t('auth.signInToAccount') }}</p>
       </div>
 
       <!-- Error message -->
@@ -69,7 +72,7 @@ async function handleLogin() {
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label for="username" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Username
+            {{ t('auth.username') }}
           </label>
           <input
             id="username"
@@ -78,13 +81,13 @@ async function handleLogin() {
             autocomplete="username"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="Enter your username"
+            :placeholder="t('auth.enterUsername')"
           />
         </div>
 
         <div>
           <label for="password" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Password
+            {{ t('auth.password') }}
           </label>
           <input
             id="password"
@@ -93,7 +96,7 @@ async function handleLogin() {
             autocomplete="current-password"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="Enter your password"
+            :placeholder="t('auth.enterPassword')"
           />
         </div>
 
@@ -111,15 +114,15 @@ async function handleLogin() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          {{ loading ? 'Signing in...' : 'Sign in' }}
+          {{ loading ? t('auth.signingIn') : t('auth.signIn') }}
         </button>
       </form>
 
       <!-- Link to register -->
       <p class="mt-6 text-center text-sm text-white/40">
-        Don't have an account?
+        {{ t('auth.noAccount') }}
         <router-link to="/register" class="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-          Create one
+          {{ t('auth.createOne') }}
         </router-link>
       </p>
     </div>
