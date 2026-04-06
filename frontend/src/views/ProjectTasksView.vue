@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const taskStore = useTaskStore()
 
@@ -58,7 +60,7 @@ onMounted(loadData)
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-xl font-bold text-gray-900">Project Tasks</h1>
+      <h1 class="text-xl font-bold text-gray-900">{{ t('project.projectTasks') }}</h1>
     </div>
 
     <!-- Error -->
@@ -78,7 +80,7 @@ onMounted(loadData)
           ]"
           @click="activeTab = 'dev'"
         >
-          Dev Tasks ({{ taskStore.devTasks.length }})
+          {{ t('project.devTasksLabel') }} ({{ taskStore.devTasks.length }})
         </button>
         <button
           :class="[
@@ -89,32 +91,32 @@ onMounted(loadData)
           ]"
           @click="activeTab = 'test'"
         >
-          Test Tasks ({{ taskStore.testTasks.length }})
+          {{ t('project.testTasksLabel') }} ({{ taskStore.testTasks.length }})
         </button>
       </nav>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="py-12 text-center text-gray-500">Loading...</div>
+    <div v-if="loading" class="py-12 text-center text-gray-500">{{ t('common.loading') }}</div>
 
     <!-- Dev Tasks Tab -->
     <template v-else-if="activeTab === 'dev'">
       <EmptyState
         v-if="taskStore.devTasks.length === 0"
-        title="No dev tasks"
-        description="Development tasks will appear here once created from requirements."
+        :title="t('task.noDevTasks')"
+        :description="t('task.noDevTasksDesc')"
       />
 
       <div v-else class="glass-card overflow-hidden">
         <table class="w-full text-sm">
           <thead class="border-b border-blue-500/5 bg-blue-500/[0.02]">
             <tr>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Title</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Status</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Assignee</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Est. Hours</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Created</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Actions</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.status') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('task.assignee') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('task.estHours') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.created') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-blue-500/5">
@@ -127,7 +129,7 @@ onMounted(loadData)
               <td class="px-5 py-3">
                 <StatusBadge :status="task.status" size="sm" />
               </td>
-              <td class="px-5 py-3 text-gray-500">{{ task.assignee_id ?? 'Unassigned' }}</td>
+              <td class="px-5 py-3 text-gray-500">{{ task.assignee_id ?? t('task.unassigned') }}</td>
               <td class="px-5 py-3 text-gray-500">{{ task.estimate_hours ?? '-' }}</td>
               <td class="px-5 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
               <td class="px-5 py-3">
@@ -138,7 +140,7 @@ onMounted(loadData)
                     class="btn-primary px-3 py-1.5 text-xs"
                     @click="handleClaim(task.id)"
                   >
-                    Claim
+                    {{ t('task.claim') }}
                   </button>
                   <!-- Status dropdown for transitions -->
                   <select
@@ -163,18 +165,18 @@ onMounted(loadData)
     <template v-else-if="activeTab === 'test'">
       <EmptyState
         v-if="taskStore.testTasks.length === 0"
-        title="No test tasks"
-        description="Test tasks will appear here once created from requirements."
+        :title="t('task.noTestTasks')"
+        :description="t('task.noTestTasksDesc')"
       />
 
       <div v-else class="glass-card overflow-hidden">
         <table class="w-full text-sm">
           <thead class="border-b border-blue-500/5 bg-blue-500/[0.02]">
             <tr>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Title</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Status</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Requirement</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Created</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.status') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('project.requirementCol') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.created') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-blue-500/5">

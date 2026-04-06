@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import Modal from '@/components/Modal.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id as string
@@ -42,7 +44,7 @@ async function handleSave() {
   saving.value = true
   try {
     if (!formName.value.trim()) {
-      saveError.value = 'Project name is required.'
+      saveError.value = t('project.projectNameRequired')
       return
     }
     await projectStore.update(projectId, {
@@ -53,7 +55,7 @@ async function handleSave() {
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false }, 3000)
   } catch (err: any) {
-    saveError.value = err?.response?.data?.detail || err?.message || 'Failed to save settings.'
+    saveError.value = err?.response?.data?.detail || err?.message || t('project.failedSaveSettings')
   } finally {
     saving.value = false
   }
@@ -68,7 +70,7 @@ function openDeleteModal() {
 async function handleDelete() {
   deleteError.value = ''
   if (deleteConfirm.value !== project.value?.name) {
-    deleteError.value = 'Project name does not match.'
+    deleteError.value = t('project.projectNameNoMatch')
     return
   }
   deleting.value = true
@@ -77,7 +79,7 @@ async function handleDelete() {
     showDeleteModal.value = false
     router.push({ name: 'projects' })
   } catch (err: any) {
-    deleteError.value = err?.response?.data?.detail || err?.message || 'Failed to delete project.'
+    deleteError.value = err?.response?.data?.detail || err?.message || t('project.failedDeleteProject')
   } finally {
     deleting.value = false
   }
@@ -89,7 +91,7 @@ onMounted(async () => {
     await projectStore.fetchOne(projectId)
     populateForm()
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || 'Failed to load project.'
+    error.value = err?.response?.data?.detail || t('project.failedLoadProjectShort')
   } finally {
     loading.value = false
   }
@@ -116,8 +118,8 @@ onMounted(async () => {
       <!-- General settings -->
       <div class="glass-card overflow-hidden">
         <div class="px-6 py-4 border-b border-blue-500/8">
-          <h2 class="text-sm font-bold text-gray-900">General</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Update your project settings.</p>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('project.general') }}</h2>
+          <p class="text-xs text-gray-500 mt-0.5">{{ t('project.generalDesc') }}</p>
         </div>
 
         <form @submit.prevent="handleSave" class="px-6 py-5 space-y-5">
@@ -126,11 +128,11 @@ onMounted(async () => {
             {{ saveError }}
           </div>
           <div v-if="saveSuccess" class="p-3 bg-green-50 border border-green-200/60 rounded-[10px] text-sm text-green-700">
-            Settings saved successfully.
+            {{ t('project.settingsSaved') }}
           </div>
 
           <div>
-            <label for="settings-name" class="block text-xs font-semibold text-gray-600 mb-1.5">Project Name</label>
+            <label for="settings-name" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.projectNameLabel') }}</label>
             <input
               id="settings-name"
               v-model="formName"
@@ -141,7 +143,7 @@ onMounted(async () => {
           </div>
 
           <div>
-            <label for="settings-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">Slug</label>
+            <label for="settings-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.slug') }}</label>
             <input
               id="settings-slug"
               v-model="formSlug"
@@ -152,13 +154,13 @@ onMounted(async () => {
           </div>
 
           <div>
-            <label for="settings-desc" class="block text-xs font-semibold text-gray-600 mb-1.5">Description</label>
+            <label for="settings-desc" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.description') }}</label>
             <textarea
               id="settings-desc"
               v-model="formDesc"
               rows="4"
               class="input-glass resize-none"
-              placeholder="Describe your project..."
+              :placeholder="t('project.describeProject')"
             />
           </div>
 
@@ -168,7 +170,7 @@ onMounted(async () => {
               :disabled="saving"
               class="btn-primary px-5 py-2 text-sm"
             >
-              {{ saving ? 'Saving...' : 'Save Changes' }}
+              {{ saving ? t('common.saving') : t('project.settingsUpdate') }}
             </button>
           </div>
         </form>
@@ -177,41 +179,39 @@ onMounted(async () => {
       <!-- Danger zone -->
       <div class="bg-white/70 backdrop-blur-xl border border-red-200/60 rounded-[14px] shadow-glass-sm">
         <div class="px-6 py-4 border-b border-red-200/60">
-          <h2 class="text-sm font-bold text-red-700">Danger Zone</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Irreversible actions for this project.</p>
+          <h2 class="text-sm font-bold text-red-700">{{ t('project.dangerZone') }}</h2>
+          <p class="text-xs text-gray-500 mt-0.5">{{ t('project.dangerZoneDesc') }}</p>
         </div>
 
         <div class="px-6 py-5 flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-900">Delete this project</p>
-            <p class="text-xs text-gray-500">Once deleted, there is no going back.</p>
+            <p class="text-sm font-medium text-gray-900">{{ t('project.deleteProject') }}</p>
+            <p class="text-xs text-gray-500">{{ t('project.deleteOnceDeleted') }}</p>
           </div>
           <button
             class="btn-danger px-4 py-2 text-sm"
             @click="openDeleteModal"
           >
-            Delete Project
+            {{ t('project.deleteProjectBtn') }}
           </button>
         </div>
       </div>
     </template>
 
     <!-- Delete confirmation modal -->
-    <Modal :show="showDeleteModal" title="Delete Project" @close="showDeleteModal = false">
+    <Modal :show="showDeleteModal" :title="t('project.deleteConfirmTitle')" @close="showDeleteModal = false">
       <div class="space-y-4">
         <div v-if="deleteError" class="p-3 bg-red-50 border border-red-200/60 rounded-[10px] text-sm text-red-700">
           {{ deleteError }}
         </div>
 
         <p class="text-sm text-gray-700">
-          This will permanently delete the project
-          <strong class="text-gray-900">{{ project?.name }}</strong>
-          and all associated data. This action cannot be undone.
+          {{ t('project.deleteConfirmPermanent', { name: project?.name }) }}
         </p>
 
         <div>
           <label for="delete-confirm" class="block text-xs font-semibold text-gray-600 mb-1.5">
-            Type <strong>{{ project?.name }}</strong> to confirm
+            {{ t('project.deleteConfirmType', { name: project?.name }) }}
           </label>
           <input
             id="delete-confirm"
@@ -228,7 +228,7 @@ onMounted(async () => {
             class="btn-secondary px-4 py-2 text-sm"
             @click="showDeleteModal = false"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -236,7 +236,7 @@ onMounted(async () => {
             class="btn-danger px-4 py-2 text-sm"
             @click="handleDelete"
           >
-            {{ deleting ? 'Deleting...' : 'Delete Project' }}
+            {{ deleting ? t('common.deleting') : t('project.deleteProjectBtn') }}
           </button>
         </div>
       </div>

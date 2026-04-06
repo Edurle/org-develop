@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import { useIterationStore } from '@/stores/iteration'
 import { useRequirementStore } from '@/stores/requirement'
 import StatusBadge from '@/components/StatusBadge.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const projectId = route.params.id as string
 
@@ -54,7 +56,7 @@ async function saveName() {
     await projectStore.update(project.value.id, { name: editName.value.trim() })
     editingName.value = false
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || 'Failed to update name.'
+    error.value = err?.response?.data?.detail || t('project.failedUpdateName')
   } finally {
     saving.value = false
   }
@@ -67,7 +69,7 @@ async function saveDesc() {
     await projectStore.update(project.value.id, { description: editDesc.value })
     editingDesc.value = false
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || 'Failed to update description.'
+    error.value = err?.response?.data?.detail || t('project.failedUpdateDesc')
   } finally {
     saving.value = false
   }
@@ -83,7 +85,7 @@ onMounted(async () => {
       requirementStore.fetchList(projectId),
     ])
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || 'Failed to load project data.'
+    error.value = err?.response?.data?.detail || t('project.failedLoadProject')
   } finally {
     loading.value = false
   }
@@ -131,19 +133,19 @@ onMounted(async () => {
               :disabled="saving"
               @click="saveName"
             >
-              Save
+              {{ t('common.save') }}
             </button>
             <button
               class="btn-secondary !px-2 !py-1 text-xs"
               @click="editingName = false"
             >
-              Cancel
+              {{ t('common.cancel') }}
             </button>
           </div>
           <button
             v-if="!editingName"
             class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-            title="Edit name"
+            :title="t('common.edit')"
             @click="startEditName"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -154,7 +156,7 @@ onMounted(async () => {
 
         <div class="mt-2 flex items-center gap-2">
           <p v-if="!editingDesc" class="text-sm text-gray-500">
-            {{ project.description || 'No description. Click edit to add one.' }}
+            {{ project.description || t('project.noDesc') }}
           </p>
           <div v-else class="flex items-start gap-2 flex-1">
             <textarea
@@ -168,19 +170,19 @@ onMounted(async () => {
               :disabled="saving"
               @click="saveDesc"
             >
-              Save
+              {{ t('common.save') }}
             </button>
             <button
               class="btn-secondary !px-2 !py-1 text-xs"
               @click="editingDesc = false"
             >
-              Cancel
+              {{ t('common.cancel') }}
             </button>
           </div>
           <button
             v-if="!editingDesc"
             class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-            title="Edit description"
+            :title="t('common.edit')"
             @click="startEditDesc"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -193,15 +195,15 @@ onMounted(async () => {
       <!-- Quick stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="glass-card p-5">
-          <span class="text-sm font-medium text-gray-500">Requirements</span>
+          <span class="text-sm font-medium text-gray-500">{{ t('project.requirements') }}</span>
           <p class="mt-1 text-2xl font-bold text-gray-900">{{ requirementStore.requirements.length }}</p>
         </div>
         <div class="glass-card p-5">
-          <span class="text-sm font-medium text-gray-500">Iterations</span>
+          <span class="text-sm font-medium text-gray-500">{{ t('project.iterations') }}</span>
           <p class="mt-1 text-2xl font-bold text-gray-900">{{ iterationStore.iterations.length }}</p>
         </div>
         <div class="glass-card p-5">
-          <span class="text-sm font-medium text-gray-500">Members</span>
+          <span class="text-sm font-medium text-gray-500">{{ t('project.membersStat') }}</span>
           <p class="mt-1 text-2xl font-bold text-gray-900">--</p>
         </div>
       </div>
@@ -209,10 +211,10 @@ onMounted(async () => {
       <!-- Active iterations -->
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-4 border-b border-blue-500/8">
-          <h2 class="text-sm font-bold text-gray-900">Active Iterations</h2>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('project.activeIterations') }}</h2>
         </div>
         <div v-if="activeIterations.length === 0" class="px-5 py-8 text-center text-sm text-gray-400">
-          No active iterations.
+          {{ t('project.noActiveIterations') }}
         </div>
         <div v-else class="divide-y divide-blue-500/5">
           <div
@@ -235,19 +237,19 @@ onMounted(async () => {
       <!-- Recent requirements table -->
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-4 border-b border-blue-500/8">
-          <h2 class="text-sm font-bold text-gray-900">Recent Requirements</h2>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('project.recentRequirements') }}</h2>
         </div>
         <div v-if="recentRequirements.length === 0" class="px-5 py-8 text-center text-sm text-gray-400">
-          No requirements yet.
+          {{ t('project.noRequirementsYet') }}
         </div>
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-blue-500/5 bg-blue-500/[0.02]">
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Title</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Priority</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Status</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Created</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('common.priority') }}</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('common.status') }}</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('common.created') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-blue-500/5">

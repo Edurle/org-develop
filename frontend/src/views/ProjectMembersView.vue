@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import { teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
 import type { TeamMember } from '@/types'
 
+const { t } = useI18n()
 const route = useRoute()
 const projectId = route.params.id as string
 
@@ -38,7 +40,7 @@ async function loadMembers() {
       members.value = res.data
     }
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || 'Failed to load members.'
+    error.value = err?.response?.data?.detail || t('project.failedLoadMembers')
   } finally {
     loading.value = false
   }
@@ -55,12 +57,12 @@ async function handleAddMember() {
   adding.value = true
   try {
     if (!addForm.value.user_id.trim()) {
-      addError.value = 'User ID is required.'
+      addError.value = t('project.userIdRequired')
       return
     }
     const teamId = projectStore.currentProject?.team_id
     if (!teamId) {
-      addError.value = 'Project team not found.'
+      addError.value = t('project.projectTeamNotFound')
       return
     }
     const res = await teamApi.addMember(teamId, {
@@ -70,7 +72,7 @@ async function handleAddMember() {
     members.value.push(res.data)
     showAddModal.value = false
   } catch (err: any) {
-    addError.value = err?.response?.data?.detail || err?.message || 'Failed to add member.'
+    addError.value = err?.response?.data?.detail || err?.message || t('project.failedAddMember')
   } finally {
     adding.value = false
   }
@@ -84,11 +86,11 @@ onMounted(loadMembers)
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold text-gray-900">Members</h1>
-        <p class="mt-1 text-sm text-gray-500">Manage who has access to this project.</p>
+        <h1 class="text-xl font-bold text-gray-900">{{ t('project.members') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ t('project.manageMembers') }}</p>
       </div>
       <button class="btn-primary px-5 py-2.5 text-sm" @click="openAddModal">
-        Add Member
+        {{ t('project.addMember') }}
       </button>
     </div>
 
@@ -115,7 +117,7 @@ onMounted(loadMembers)
       v-else-if="members.length === 0"
       class="glass-card px-5 py-12 text-center"
     >
-      <p class="text-sm text-gray-500">No members found. Add someone to get started.</p>
+      <p class="text-sm text-gray-500">{{ t('project.noMembers') }}</p>
     </div>
 
     <!-- Members table -->
@@ -123,9 +125,9 @@ onMounted(loadMembers)
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-blue-500/5 bg-blue-500/[0.02]">
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">User ID</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Role</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Joined</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('project.userId') }}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('project.role') }}</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">{{ t('project.joined') }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-blue-500/5">
@@ -146,34 +148,34 @@ onMounted(loadMembers)
     </div>
 
     <!-- Add Member Modal -->
-    <Modal :show="showAddModal" title="Add Member" @close="showAddModal = false">
+    <Modal :show="showAddModal" :title="t('project.addMember')" @close="showAddModal = false">
       <form @submit.prevent="handleAddMember" class="space-y-4">
         <div v-if="addError" class="p-3 bg-red-50 border border-red-200/60 rounded-[10px] text-sm text-red-700">
           {{ addError }}
         </div>
 
         <div>
-          <label for="member-user-id" class="block text-xs font-semibold text-gray-600 mb-1.5">User ID</label>
+          <label for="member-user-id" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.userId') }}</label>
           <input
             id="member-user-id"
             v-model="addForm.user_id"
             type="text"
             required
             class="input-glass"
-            placeholder="Enter user ID"
+            :placeholder="t('project.enterUserId')"
           />
         </div>
 
         <div>
-          <label for="member-role" class="block text-xs font-semibold text-gray-600 mb-1.5">Role</label>
+          <label for="member-role" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.role') }}</label>
           <select
             id="member-role"
             v-model="addForm.roles"
             class="select-glass"
           >
-            <option value="admin">Admin</option>
-            <option value="member">Member</option>
-            <option value="viewer">Viewer</option>
+            <option value="admin">{{ t('project.admin') }}</option>
+            <option value="member">{{ t('project.memberRole') }}</option>
+            <option value="viewer">{{ t('project.viewer') }}</option>
           </select>
         </div>
 
@@ -183,14 +185,14 @@ onMounted(loadMembers)
             class="btn-secondary px-4 py-2 text-sm"
             @click="showAddModal = false"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="adding"
             class="btn-primary px-5 py-2 text-sm"
           >
-            {{ adding ? 'Adding...' : 'Add Member' }}
+            {{ adding ? t('project.adding') : t('project.addMember') }}
           </button>
         </div>
       </form>
