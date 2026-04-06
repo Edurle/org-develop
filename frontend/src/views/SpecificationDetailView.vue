@@ -5,7 +5,7 @@ import { useSpecificationStore } from '@/stores/specification'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
-import type { Severity, ClauseCategory } from '@/types'
+import type { Severity, ClauseCategory, SpecClause } from '@/types'
 
 const route = useRoute()
 const specStore = useSpecificationStore()
@@ -27,6 +27,15 @@ const newClauseTitle = ref('')
 const newClauseDescription = ref('')
 const newClauseCategory = ref<ClauseCategory>('functional')
 const newClauseSeverity = ref<Severity>('must')
+
+// Edit clause (reuses add clause modal)
+const isEditingClause = ref(false)
+const editClauseDbId = ref('')
+
+// Delete clause confirmation
+const showDeleteClauseConfirm = ref(false)
+const deleteClauseDbId = ref('')
+const deleteClauseTitle = ref('')
 
 const currentSpec = computed(() => specStore.currentSpec)
 
@@ -135,6 +144,57 @@ async function handleAddClause() {
   }
 }
 
+function openEditClauseModal(clause: SpecClause) {
+  isEditingClause.value = true
+  editClauseDbId.value = clause.id
+  newClauseId.value = clause.clause_id
+  newClauseTitle.value = clause.title
+  newClauseDescription.value = clause.description
+  newClauseCategory.value = clause.category
+  newClauseSeverity.value = clause.severity
+  showAddClauseModal.value = true
+}
+
+async function handleSaveClause() {
+  if (isEditingClause.value) {
+    try {
+      await specStore.updateClause(editClauseDbId.value, {
+        clause_id: newClauseId.value.trim(),
+        title: newClauseTitle.value.trim(),
+        description: newClauseDescription.value.trim(),
+        category: newClauseCategory.value,
+        severity: newClauseSeverity.value,
+      })
+      showAddClauseModal.value = false
+      isEditingClause.value = false
+    } catch (e: any) {
+      error.value = e?.message || 'Failed to update clause'
+    }
+  } else {
+    await handleAddClause()
+  }
+}
+
+function closeClauseModal() {
+  showAddClauseModal.value = false
+  isEditingClause.value = false
+}
+
+function openDeleteClauseConfirm(clause: SpecClause) {
+  deleteClauseDbId.value = clause.id
+  deleteClauseTitle.value = clause.title
+  showDeleteClauseConfirm.value = true
+}
+
+async function handleDeleteClause() {
+  try {
+    await specStore.removeClause(deleteClauseDbId.value)
+    showDeleteClauseConfirm.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to delete clause'
+  }
+}
+
 onMounted(loadAll)
 </script>
 
@@ -214,6 +274,7 @@ onMounted(loadAll)
                 <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Category</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Severity</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Description</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-blue-500/5">
@@ -227,6 +288,14 @@ onMounted(loadAll)
                   </span>
                 </td>
                 <td class="px-5 py-3 text-gray-600 max-w-xs truncate">{{ clause.description }}</td>
+                <td class="px-5 py-3">
+                  <template v-if="specStore.currentVersion?.status === 'draft'">
+                    <div class="flex items-center gap-2">
+                      <button class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors" @click="openEditClauseModal(clause)">Edit</button>
+                      <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors" @click="openDeleteClauseConfirm(clause)">Delete</button>
+                    </div>
+                  </template>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -234,7 +303,7 @@ onMounted(loadAll)
       </div>
 
       <!-- Add Clause Modal -->
-      <Modal :show="showAddClauseModal" title="Add Clause" @close="showAddClauseModal = false">
+      <Modal :show="showAddClauseModal" :title="isEditingClause ? 'Edit Clause' : 'Add Clause'" @close="closeClauseModal">
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Clause ID</label>
@@ -264,9 +333,20 @@ onMounted(loadAll)
           </div>
         </div>
         <template #footer>
-          <button class="btn-secondary px-4 py-2 text-sm" @click="showAddClauseModal = false">Cancel</button>
-          <button class="btn-primary px-5 py-2 text-sm" :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleAddClause">Add Clause</button>
+          <button class="btn-secondary px-4 py-2 text-sm" @click="closeClauseModal">Cancel</button>
+          <button class="btn-primary px-5 py-2 text-sm" :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleSaveClause">{{ isEditingClause ? 'Save' : 'Add Clause' }}</button>
         </template>
+      </Modal>
+
+      <!-- Delete Clause Confirmation Modal -->
+      <Modal :show="showDeleteClauseConfirm" title="Delete Clause" @close="showDeleteClauseConfirm = false">
+        <p class="text-sm text-gray-600">
+          Are you sure you want to delete clause <span class="font-semibold text-gray-900">{{ deleteClauseTitle }}</span>?
+        </p>
+        <div class="flex justify-end gap-3 mt-6">
+          <button class="btn-secondary" @click="showDeleteClauseConfirm = false">Cancel</button>
+          <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDeleteClause">Delete</button>
+        </div>
       </Modal>
     </template>
   </div>
