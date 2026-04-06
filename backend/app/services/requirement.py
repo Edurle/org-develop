@@ -62,6 +62,70 @@ async def create_requirement(
     return requirement
 
 
+async def update_requirement(
+    db: AsyncSession,
+    requirement_id: str,
+    user_id: str,
+    title: str | None = None,
+    priority: str | None = None,
+) -> Requirement:
+    """Update a requirement's title and/or priority."""
+    result = await db.execute(
+        select(Requirement).where(Requirement.id == requirement_id)
+    )
+    requirement = result.scalars().first()
+    if requirement is None:
+        raise ValueError(f"Requirement '{requirement_id}' not found")
+
+    if title is not None:
+        requirement.title = title
+
+    if priority is not None:
+        if priority not in ("low", "medium", "high", "critical"):
+            raise ValueError(
+                f"Invalid priority '{priority}'. "
+                "Must be one of: low, medium, high, critical"
+            )
+        requirement.priority = priority
+
+    await db.flush()
+    await log_action(
+        db, user_id=user_id, action="requirement.update",
+        resource_type="requirement", resource_id=requirement.id,
+        detail=f"Updated requirement '{requirement.title}'",
+    )
+    await db.refresh(requirement)
+    return requirement
+
+
+async def delete_requirement(
+    db: AsyncSession,
+    requirement_id: str,
+    user_id: str,
+) -> None:
+    """Delete a requirement. Only allowed in draft or cancelled status."""
+    result = await db.execute(
+        select(Requirement).where(Requirement.id == requirement_id)
+    )
+    requirement = result.scalars().first()
+    if requirement is None:
+        raise ValueError(f"Requirement '{requirement_id}' not found")
+
+    if requirement.status not in ("draft", "cancelled"):
+        raise ValueError(
+            f"Cannot delete requirement in '{requirement.status}' status. "
+            "Only 'draft' or 'cancelled' requirements can be deleted."
+        )
+
+    await log_action(
+        db, user_id=user_id, action="requirement.delete",
+        resource_type="requirement", resource_id=requirement.id,
+        detail=f"Deleted requirement '{requirement.title}'",
+    )
+    await db.delete(requirement)
+    await db.flush()
+
+
 async def update_requirement_status(
     db: AsyncSession,
     requirement_id: str,
