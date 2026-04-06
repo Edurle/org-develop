@@ -78,6 +78,15 @@ async function loadAll() {
   }
 }
 
+async function handleCreateVersion() {
+  try {
+    await specStore.createVersion(specId.value, {})
+    await specStore.fetchVersions(specId.value)
+  } catch (e: any) {
+    error.value = e?.message || t('specification.errorLoadFailed')
+  }
+}
+
 function startEdit(version: { id: string; content: Record<string, unknown> }) {
   editingVersionId.value = version.id
   editContent.value = JSON.stringify(version.content, null, 2)
@@ -223,7 +232,10 @@ onMounted(loadAll)
 
       <!-- Version list -->
       <div class="mb-8">
-        <h2 class="text-sm font-bold text-gray-900 mb-3">{{ t('specification.versions') }}</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-gray-900">{{ t('specification.versions') }}</h2>
+          <button class="btn-primary px-4 py-2 text-sm" @click="handleCreateVersion">{{ t('specification.createVersion') }}</button>
+        </div>
         <div v-if="specStore.versions.length === 0" class="text-sm text-gray-500 py-4">{{ t('specification.noVersions') }}</div>
         <div v-else class="space-y-3">
           <div v-for="ver in specStore.versions" :key="ver.id" class="glass-card overflow-hidden">
@@ -237,11 +249,11 @@ onMounted(loadAll)
                 <template v-if="ver.status === 'draft'">
                   <button v-if="editingVersionId !== ver.id" class="btn-ghost px-3 py-1.5 text-xs" @click="startEdit(ver)">{{ t('specification.editContent') }}</button>
                   <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200/60 rounded-[10px] hover:bg-amber-100 transition-colors cursor-pointer" @click="specStore.submitForReview(ver.id)">{{ t('specification.submitForReview') }}</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-500/10 border border-amber-500/15 rounded-full backdrop-blur-sm hover:bg-amber-500/20 transition-all cursor-pointer" @click="specStore.submitForReview(ver.id)">{{ t('specification.submitForReview') }}</button>
                 </template>
                 <template v-if="ver.status === 'reviewing'">
-                  <button class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-[10px] hover:bg-emerald-100 transition-colors cursor-pointer" @click="handleLock(ver.id)">{{ t('specification.lock') }}</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200/60 rounded-[10px] hover:bg-red-100 transition-colors cursor-pointer" @click="handleReject(ver.id)">{{ t('specification.reject') }}</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-500/10 border border-emerald-500/15 rounded-full backdrop-blur-sm hover:bg-emerald-500/20 transition-all cursor-pointer" @click="handleLock(ver.id)">{{ t('specification.lock') }}</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-500/10 border border-red-500/15 rounded-full backdrop-blur-sm hover:bg-red-500/20 transition-all cursor-pointer" @click="handleReject(ver.id)">{{ t('specification.reject') }}</button>
                   <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
                 </template>
                 <template v-if="ver.status === 'locked' || ver.status === 'rejected'">
@@ -347,7 +359,7 @@ onMounted(loadAll)
         </p>
         <div class="flex justify-end gap-3 mt-6">
           <button class="btn-secondary" @click="showDeleteClauseConfirm = false">{{ t('common.cancel') }}</button>
-          <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDeleteClause">{{ t('common.delete') }}</button>
+          <button class="btn-danger px-4 py-2 text-sm" @click="handleDeleteClause">{{ t('common.delete') }}</button>
         </div>
       </Modal>
     </template>

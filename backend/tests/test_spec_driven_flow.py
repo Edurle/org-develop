@@ -106,9 +106,9 @@ class TestSpecVersionImmutability:
 
     async def test_can_create_new_version(self, db, req_with_seed):
         spec, version = await self._setup_locked_spec(db, req_with_seed)
-        v2 = await create_spec_version(db, spec.id, {"endpoints": [{"path": "/v2"}]})
-        assert v2.version == 2
-        assert v2.status == "draft"
+        v3 = await create_spec_version(db, spec.id, {"endpoints": [{"path": "/v2"}]})
+        assert v3.version == 3
+        assert v3.status == "draft"
 
     async def test_locked_version_status_is_immutable(self, db, req_with_seed):
         spec, version = await self._setup_locked_spec(db, req_with_seed)

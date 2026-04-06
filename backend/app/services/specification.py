@@ -61,10 +61,21 @@ async def create_specification(
         requirement_id=requirement_id,
         spec_type=spec_type,
         title=title,
-        current_version=0,
+        current_version=1,
     )
     db.add(spec)
     await db.flush()
+
+    # Auto-create the first draft version
+    version = SpecVersion(
+        spec_id=spec.id,
+        version=1,
+        status="draft",
+        content={},
+    )
+    db.add(version)
+    await db.flush()
+
     return spec
 
 

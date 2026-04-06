@@ -203,6 +203,8 @@
     "specType": "类型",
     "versions": "版本",
     "noVersions": "暂无版本。",
+    "createVersion": "创建新版本",
+    "createVersionDesc": "创建一个新的草稿版本以编辑规格内容。",
     "editContent": "编辑内容",
     "viewClauses": "查看条款",
     "submitForReview": "提交评审",

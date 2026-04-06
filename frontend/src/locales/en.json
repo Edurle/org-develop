@@ -203,6 +203,8 @@
     "specType": "Type",
     "versions": "Versions",
     "noVersions": "No versions yet.",
+    "createVersion": "Create New Version",
+    "createVersionDesc": "Create a new draft version to edit specification content.",
     "editContent": "Edit Content",
     "viewClauses": "View Clauses",
     "submitForReview": "Submit for Review",

@@ -46,7 +46,17 @@ class TestSpecificationService:
         assert spec.spec_type == "api"
         assert spec.requirement_id == req_id
         assert spec.title == "Login API Spec"
-        assert spec.current_version == 0
+        assert spec.current_version == 1
+
+        # Verify auto-created first draft version
+        result = await db.execute(
+            select(SpecVersion).where(SpecVersion.spec_id == spec.id)
+        )
+        versions = list(result.scalars().all())
+        assert len(versions) == 1
+        assert versions[0].version == 1
+        assert versions[0].status == "draft"
+        assert versions[0].content == {}
 
     async def test_create_spec_invalid_type(self, db, req_with_seed):
         req_id = req_with_seed["requirement"].id
@@ -68,26 +78,27 @@ class TestSpecificationService:
         spec = await create_specification(db, req_id, "api", "API Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
         assert version.spec_id == spec.id
-        assert version.version == 1
+        # v1 is auto-created, so this becomes v2
+        assert version.version == 2
         assert version.status == "draft"
 
-        # Create second version
-        v2 = await create_spec_version(db, spec.id, {"more": True})
-        assert v2.version == 2
-        assert v2.status == "draft"
+        # Create another version (v3)
+        v3 = await create_spec_version(db, spec.id, {"more": True})
+        assert v3.version == 3
+        assert v3.status == "draft"
 
         # Verify version auto-increment in DB
         result = await db.execute(
             select(func.max(SpecVersion.version)).where(SpecVersion.spec_id == spec.id)
         )
-        assert result.scalar_one() == 2
+        assert result.scalar_one() == 3
 
         # Verify spec.current_version was updated
         result = await db.execute(
             select(Specification).where(Specification.id == spec.id)
         )
         updated_spec = result.scalars().first()
-        assert updated_spec.current_version == 2
+        assert updated_spec.current_version == 3
 
     async def test_create_version_nonexistent_spec(self, db, req_with_seed):
         with pytest.raises(ValueError, match="not found"):
