@@ -14,6 +14,7 @@ from app.schemas.specification import (
     SpecVersionCreate,
     SpecVersionResponse,
     SpecClauseCreate,
+    SpecClauseUpdate,
     SpecClauseResponse,
 )
 from app.services import specification as specification_svc
@@ -211,3 +212,47 @@ async def list_clauses(
 ):
     clauses = await clause_svc.list_clauses(db, spec_version_id=version_id)
     return [SpecClauseResponse.model_validate(c).model_dump() for c in clauses]
+
+
+@router.patch("/spec-clauses/{clause_id}", response_model=SpecClauseResponse)
+async def update_clause(
+    clause_id: str,
+    body: SpecClauseUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        clause = await clause_svc.update_clause(
+            db,
+            clause_id=clause_id,
+            clause_id_str=body.clause_id,
+            title=body.title,
+            description=body.description,
+            category=body.category,
+            severity=body.severity,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="clause.update",
+        resource_type="spec_clause", resource_id=clause.id,
+        detail=f"Updated clause '{clause.clause_id}'",
+    )
+    return SpecClauseResponse.model_validate(clause).model_dump()
+
+
+@router.delete("/spec-clauses/{clause_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_clause(
+    clause_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await clause_svc.delete_clause(db, clause_id=clause_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="clause.delete",
+        resource_type="spec_clause", resource_id=clause_id,
+        detail=f"Deleted clause '{clause_id}'",
+    )
