@@ -25,6 +25,8 @@ import type {
 export const authApi = {
   login: (username: string, password: string) =>
     api.post<TokenPair>('/auth/login', { username, password }),
+  register: (data: { username: string; email: string; password: string; display_name?: string }) =>
+    api.post<TokenPair>('/auth/register', data),
   refresh: (refresh_token: string) =>
     api.post<TokenPair>('/auth/refresh', { refresh_token }),
   me: () => api.get<User>('/auth/me'),

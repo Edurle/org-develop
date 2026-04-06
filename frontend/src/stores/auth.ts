@@ -56,6 +56,29 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('refreshToken', refresh_token)
   }
 
+  async function register(username: string, email: string, password: string, displayName?: string) {
+    const response = await api.post('/auth/register', {
+      username,
+      email,
+      password,
+      display_name: displayName || undefined,
+    })
+    const { access_token, refresh_token } = response.data
+
+    token.value = access_token
+    refreshToken.value = refresh_token
+
+    const payload = decodeJwtPayload(access_token)
+    user.value = {
+      id: (payload.sub as string) ?? '',
+      username: (payload.username as string) ?? '',
+      email,
+    }
+
+    localStorage.setItem('token', access_token)
+    localStorage.setItem('refreshToken', refresh_token)
+  }
+
   async function logout() {
     token.value = null
     refreshToken.value = null
@@ -89,6 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     username,
     login,
+    register,
     logout,
     refresh,
   }

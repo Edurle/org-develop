@@ -1,26 +1,55 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 const username = ref('')
+const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
+const displayName = ref('')
 const loading = ref(false)
 const error = ref('')
 
-async function handleLogin() {
+const passwordMismatch = computed(() =>
+  confirmPassword.value.length > 0 && password.value !== confirmPassword.value
+)
+
+async function handleRegister() {
   error.value = ''
+
+  if (!username.value || !email.value || !password.value) {
+    error.value = 'All fields are required.'
+    return
+  }
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match.'
+    return
+  }
+  if (password.value.length < 6) {
+    error.value = 'Password must be at least 6 characters.'
+    return
+  }
+
   loading.value = true
   try {
-    await authStore.login(username.value, password.value)
-    const redirect = (route.query.redirect as string) || '/'
-    router.push(redirect)
+    await authStore.register(
+      username.value,
+      email.value,
+      password.value,
+      displayName.value || undefined,
+    )
+    router.push('/')
   } catch (err: any) {
-    error.value = err?.response?.data?.detail || err?.message || 'Login failed. Please check your credentials.'
+    const detail = err?.response?.data?.detail
+    if (typeof detail === 'string' && detail.includes('already')) {
+      error.value = 'Username or email already exists.'
+    } else {
+      error.value = detail || err?.message || 'Registration failed. Please try again.'
+    }
   } finally {
     loading.value = false
   }
@@ -42,8 +71,8 @@ async function handleLogin() {
       style="background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);"
     />
 
-    <!-- Login card -->
-    <div class="relative w-full max-w-[380px] rounded-[20px] p-8 border border-white/12"
+    <!-- Register card -->
+    <div class="relative w-full max-w-[400px] rounded-[20px] p-8 border border-white/12"
       style="background: rgba(255,255,255,0.08); backdrop-filter: blur(24px);"
     >
       <!-- Logo -->
@@ -54,7 +83,7 @@ async function handleLogin() {
           </svg>
         </div>
         <h1 class="text-xl font-bold text-white">OrgDev</h1>
-        <p class="text-sm text-white/50 mt-1">Sign in to your account</p>
+        <p class="text-sm text-white/50 mt-1">Create your account</p>
       </div>
 
       <!-- Error message -->
@@ -65,11 +94,11 @@ async function handleLogin() {
         {{ error }}
       </div>
 
-      <!-- Login form -->
-      <form @submit.prevent="handleLogin" class="space-y-4">
+      <!-- Register form -->
+      <form @submit.prevent="handleRegister" class="space-y-4">
         <div>
           <label for="username" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Username
+            Username <span class="text-red-400">*</span>
           </label>
           <input
             id="username"
@@ -78,28 +107,74 @@ async function handleLogin() {
             autocomplete="username"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="Enter your username"
+            placeholder="Choose a username"
+          />
+        </div>
+
+        <div>
+          <label for="email" class="block text-xs font-semibold text-white/60 mb-1.5">
+            Email <span class="text-red-400">*</span>
+          </label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            required
+            class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label for="display-name" class="block text-xs font-semibold text-white/60 mb-1.5">
+            Display Name
+          </label>
+          <input
+            id="display-name"
+            v-model="displayName"
+            type="text"
+            autocomplete="name"
+            class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
+            placeholder="How should we call you?"
           />
         </div>
 
         <div>
           <label for="password" class="block text-xs font-semibold text-white/60 mb-1.5">
-            Password
+            Password <span class="text-red-400">*</span>
           </label>
           <input
             id="password"
             v-model="password"
             type="password"
-            autocomplete="current-password"
+            autocomplete="new-password"
             required
             class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
-            placeholder="Enter your password"
+            placeholder="At least 6 characters"
           />
+        </div>
+
+        <div>
+          <label for="confirm-password" class="block text-xs font-semibold text-white/60 mb-1.5">
+            Confirm Password <span class="text-red-400">*</span>
+          </label>
+          <input
+            id="confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            required
+            class="w-full px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-[10px] text-sm text-white placeholder-white/25 outline-none focus:border-blue-400/40 focus:ring-2 focus:ring-blue-400/15 transition-all duration-150"
+            :class="{ '!border-red-400/40': passwordMismatch }"
+            placeholder="Repeat your password"
+          />
+          <p v-if="passwordMismatch" class="mt-1 text-xs text-red-300">Passwords do not match</p>
         </div>
 
         <button
           type="submit"
-          :disabled="loading"
+          :disabled="loading || passwordMismatch"
           class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-blue-600 to-blue-700 rounded-[10px] shadow-[0_2px_12px_rgba(37,99,235,0.4)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.5)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 mt-2"
         >
           <svg
@@ -111,15 +186,15 @@ async function handleLogin() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          {{ loading ? 'Signing in...' : 'Sign in' }}
+          {{ loading ? 'Creating account...' : 'Create account' }}
         </button>
       </form>
 
-      <!-- Link to register -->
+      <!-- Link to login -->
       <p class="mt-6 text-center text-sm text-white/40">
-        Don't have an account?
-        <router-link to="/register" class="text-blue-400 hover:text-blue-300 transition-colors font-medium">
-          Create one
+        Already have an account?
+        <router-link to="/login" class="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+          Sign in
         </router-link>
       </p>
     </div>
