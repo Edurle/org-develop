@@ -84,22 +84,21 @@ async def update_requirement(
     requirement_id: str,
     body: RequirementUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[User, Depends(get_current_user)],
 ):
-    result = await db.execute(
-        select(Requirement).where(Requirement.id == requirement_id)
-    )
-    req = result.scalars().first()
-    if req is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Requirement not found"
-        )
-
     update_data = body.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(req, field, value)
-    await db.flush()
-    await db.refresh(req)
+    update_data.pop("status", None)
+    update_data.pop("assignee_id", None)
+    try:
+        req = await requirement_svc.update_requirement(
+            db,
+            requirement_id=requirement_id,
+            user_id=user.id,
+            title=update_data.get("title"),
+            priority=update_data.get("priority"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return RequirementResponse.model_validate(req).model_dump()
 
 
@@ -129,3 +128,22 @@ async def transition_requirement_status(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     # Eagerly validate while session is still open to avoid MissingGreenlet
     return RequirementResponse.model_validate(req).model_dump()
+
+
+@router.delete(
+    "/requirements/{requirement_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_requirement(
+    requirement_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await requirement_svc.delete_requirement(
+            db,
+            requirement_id=requirement_id,
+            user_id=user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
