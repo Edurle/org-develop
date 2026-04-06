@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useSpecificationStore } from '@/stores/specification'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
 import type { Severity, ClauseCategory, SpecClause } from '@/types'
 
+const { t } = useI18n()
 const route = useRoute()
 const specStore = useSpecificationStore()
 
@@ -70,7 +72,7 @@ async function loadAll() {
     }
     await specStore.fetchVersions(specId.value)
   } catch (e: any) {
-    error.value = e?.message || 'Failed to load specification'
+    error.value = e?.message || t('specification.errorLoadFailed')
   } finally {
     loading.value = false
   }
@@ -94,7 +96,7 @@ async function saveContent() {
     await specStore.fetchVersions(specId.value)
     editingVersionId.value = null
   } catch (e: any) {
-    error.value = e?.message || 'Invalid JSON content'
+    error.value = e?.message || t('specification.errorInvalidJson')
   }
 }
 
@@ -102,7 +104,7 @@ async function handleLock(versionId: string) {
   try {
     await specStore.lock(versionId)
   } catch (e: any) {
-    error.value = e?.message || 'Failed to lock version'
+    error.value = e?.message || t('specification.errorLockFailed')
   }
 }
 
@@ -110,7 +112,7 @@ async function handleReject(versionId: string) {
   try {
     await specStore.reject(versionId)
   } catch (e: any) {
-    error.value = e?.message || 'Failed to reject version'
+    error.value = e?.message || t('specification.errorRejectFailed')
   }
 }
 
@@ -140,7 +142,7 @@ async function handleAddClause() {
     })
     showAddClauseModal.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to create clause'
+    error.value = e?.message || t('specification.errorCreateClause')
   }
 }
 
@@ -168,7 +170,7 @@ async function handleSaveClause() {
       showAddClauseModal.value = false
       isEditingClause.value = false
     } catch (e: any) {
-      error.value = e?.message || 'Failed to update clause'
+      error.value = e?.message || t('specification.errorUpdateClause')
     }
   } else {
     await handleAddClause()
@@ -191,7 +193,7 @@ async function handleDeleteClause() {
     await specStore.removeClause(deleteClauseDbId.value)
     showDeleteClauseConfirm.value = false
   } catch (e: any) {
-    error.value = e?.message || 'Failed to delete clause'
+    error.value = e?.message || t('specification.errorDeleteClause')
   }
 }
 
@@ -201,14 +203,14 @@ onMounted(loadAll)
 <template>
   <div class="max-w-6xl mx-auto">
     <!-- Loading -->
-    <div v-if="loading" class="py-12 text-center text-gray-500">Loading...</div>
+    <div v-if="loading" class="py-12 text-center text-gray-500">{{ t('common.loading') }}</div>
 
     <!-- Error -->
     <div v-else-if="error" class="p-3 bg-red-50 border border-red-200/60 rounded-[14px] text-red-700 text-sm mb-4">
       {{ error }}
     </div>
 
-    <EmptyState v-else-if="!currentSpec" title="Specification not found" />
+    <EmptyState v-else-if="!currentSpec" :title="t('specification.specNotFound')" />
 
     <template v-else>
       <!-- Header -->
@@ -221,37 +223,37 @@ onMounted(loadAll)
 
       <!-- Version list -->
       <div class="mb-8">
-        <h2 class="text-sm font-bold text-gray-900 mb-3">Versions</h2>
-        <div v-if="specStore.versions.length === 0" class="text-sm text-gray-500 py-4">No versions yet.</div>
+        <h2 class="text-sm font-bold text-gray-900 mb-3">{{ t('specification.versions') }}</h2>
+        <div v-if="specStore.versions.length === 0" class="text-sm text-gray-500 py-4">{{ t('specification.noVersions') }}</div>
         <div v-else class="space-y-3">
           <div v-for="ver in specStore.versions" :key="ver.id" class="glass-card overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3">
               <div class="flex items-center gap-3">
-                <span class="font-medium text-gray-900 text-sm">Version {{ ver.version }}</span>
+                <span class="font-medium text-gray-900 text-sm">{{ t('specification.version', { n: ver.version }) }}</span>
                 <StatusBadge :status="ver.status" size="sm" />
                 <span class="text-xs text-gray-400">{{ formatDate(ver.created_at) }}</span>
               </div>
               <div class="flex items-center gap-2">
                 <template v-if="ver.status === 'draft'">
-                  <button v-if="editingVersionId !== ver.id" class="btn-ghost px-3 py-1.5 text-xs" @click="startEdit(ver)">Edit Content</button>
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">View Clauses</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200/60 rounded-[10px] hover:bg-amber-100 transition-colors cursor-pointer" @click="specStore.submitForReview(ver.id)">Submit for Review</button>
+                  <button v-if="editingVersionId !== ver.id" class="btn-ghost px-3 py-1.5 text-xs" @click="startEdit(ver)">{{ t('specification.editContent') }}</button>
+                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200/60 rounded-[10px] hover:bg-amber-100 transition-colors cursor-pointer" @click="specStore.submitForReview(ver.id)">{{ t('specification.submitForReview') }}</button>
                 </template>
                 <template v-if="ver.status === 'reviewing'">
-                  <button class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-[10px] hover:bg-emerald-100 transition-colors cursor-pointer" @click="handleLock(ver.id)">Lock</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200/60 rounded-[10px] hover:bg-red-100 transition-colors cursor-pointer" @click="handleReject(ver.id)">Reject</button>
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">View Clauses</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-[10px] hover:bg-emerald-100 transition-colors cursor-pointer" @click="handleLock(ver.id)">{{ t('specification.lock') }}</button>
+                  <button class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200/60 rounded-[10px] hover:bg-red-100 transition-colors cursor-pointer" @click="handleReject(ver.id)">{{ t('specification.reject') }}</button>
+                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
                 </template>
                 <template v-if="ver.status === 'locked' || ver.status === 'rejected'">
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">View Clauses</button>
+                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
                 </template>
               </div>
             </div>
             <div v-if="editingVersionId === ver.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
-              <textarea id="spec-content" v-model="editContent" class="input-glass font-mono h-64 resize-y" placeholder="JSON content" />
+              <textarea id="spec-content" v-model="editContent" class="input-glass font-mono h-64 resize-y" :placeholder="t('specification.jsonContent')" />
               <div class="flex items-center justify-end gap-2 mt-2">
-                <button class="btn-secondary px-3 py-1.5 text-xs" @click="cancelEdit">Cancel</button>
-                <button class="btn-primary px-3 py-1.5 text-xs" @click="saveContent">Save as New Version</button>
+                <button class="btn-secondary px-3 py-1.5 text-xs" @click="cancelEdit">{{ t('common.cancel') }}</button>
+                <button class="btn-primary px-3 py-1.5 text-xs" @click="saveContent">{{ t('specification.saveAsNewVersion') }}</button>
               </div>
             </div>
           </div>
@@ -261,20 +263,20 @@ onMounted(loadAll)
       <!-- Clauses section -->
       <div v-if="specStore.currentVersion">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-bold text-gray-900">Clauses (Version {{ specStore.currentVersion.version }})</h2>
-          <button v-if="specStore.currentVersion.status === 'draft'" class="btn-primary px-4 py-2 text-sm" @click="openAddClauseModal">Add Clause</button>
+          <h2 class="text-sm font-bold text-gray-900">{{ t('specification.clauses') + ' (' + t('specification.version', { n: specStore.currentVersion.version }) + ')' }}</h2>
+          <button v-if="specStore.currentVersion.status === 'draft'" class="btn-primary px-4 py-2 text-sm" @click="openAddClauseModal">{{ t('specification.addClause') }}</button>
         </div>
-        <EmptyState v-if="specStore.clauses.length === 0" title="No clauses" description="Add clauses to define specific requirements within this version." :action-label="specStore.currentVersion.status === 'draft' ? 'Add Clause' : undefined" @action="openAddClauseModal" />
+        <EmptyState v-if="specStore.clauses.length === 0" :title="t('specification.noClauses')" :description="t('specification.noClausesDesc')" :action-label="specStore.currentVersion.status === 'draft' ? t('specification.addClause') : undefined" @action="openAddClauseModal" />
         <div v-else class="glass-card overflow-hidden">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-blue-500/5 bg-blue-500/[0.02]">
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Clause ID</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Title</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Category</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Severity</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Description</th>
-                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Actions</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('specification.clauseId') }}</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.type') }}</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('specification.severityLabel') }}</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.description') }}</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-blue-500/5">
@@ -291,8 +293,8 @@ onMounted(loadAll)
                 <td class="px-5 py-3">
                   <template v-if="specStore.currentVersion?.status === 'draft'">
                     <div class="flex items-center gap-2">
-                      <button class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors" @click="openEditClauseModal(clause)">Edit</button>
-                      <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors" @click="openDeleteClauseConfirm(clause)">Delete</button>
+                      <button class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors" @click="openEditClauseModal(clause)">{{ t('common.edit') }}</button>
+                      <button class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors" @click="openDeleteClauseConfirm(clause)">{{ t('common.delete') }}</button>
                     </div>
                   </template>
                 </td>
@@ -302,30 +304,30 @@ onMounted(loadAll)
         </div>
       </div>
 
-      <!-- Add Clause Modal -->
-      <Modal :show="showAddClauseModal" :title="isEditingClause ? 'Edit Clause' : 'Add Clause'" @close="closeClauseModal">
+      <!-- Add/Edit Clause Modal -->
+      <Modal :show="showAddClauseModal" :title="isEditingClause ? t('specification.editClause') : t('specification.addClause')" @close="closeClauseModal">
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Clause ID</label>
-            <input id="clause-id" v-model="newClauseId" type="text" placeholder="e.g. REQ-001" class="input-glass" />
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('specification.clauseId') }}</label>
+            <input id="clause-id" v-model="newClauseId" type="text" :placeholder="t('specification.clauseIdPlaceholder')" class="input-glass" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Title</label>
-            <input id="clause-title" v-model="newClauseTitle" type="text" placeholder="Clause title" class="input-glass" />
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('specification.clauseTitle') }}</label>
+            <input id="clause-title" v-model="newClauseTitle" type="text" :placeholder="t('specification.clauseTitle')" class="input-glass" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Description</label>
-            <textarea id="clause-description" v-model="newClauseDescription" placeholder="Clause description" class="input-glass resize-y" rows="3" />
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('specification.clauseDescription') }}</label>
+            <textarea id="clause-description" v-model="newClauseDescription" :placeholder="t('specification.clauseDescription')" class="input-glass resize-y" rows="3" />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1.5">Category</label>
+              <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('specification.category') }}</label>
               <select id="clause-category" v-model="newClauseCategory" class="select-glass">
                 <option v-for="cat in categoryOptions" :key="cat" :value="cat">{{ cat }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1.5">Severity</label>
+              <label class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('specification.severityLabel') }}</label>
               <select id="clause-severity" v-model="newClauseSeverity" class="select-glass">
                 <option v-for="sev in severityOptions" :key="sev" :value="sev">{{ sev.toUpperCase() }}</option>
               </select>
@@ -333,19 +335,19 @@ onMounted(loadAll)
           </div>
         </div>
         <template #footer>
-          <button class="btn-secondary px-4 py-2 text-sm" @click="closeClauseModal">Cancel</button>
-          <button class="btn-primary px-5 py-2 text-sm" :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleSaveClause">{{ isEditingClause ? 'Save' : 'Add Clause' }}</button>
+          <button class="btn-secondary px-4 py-2 text-sm" @click="closeClauseModal">{{ t('common.cancel') }}</button>
+          <button class="btn-primary px-5 py-2 text-sm" :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleSaveClause">{{ isEditingClause ? t('common.save') : t('specification.addClause') }}</button>
         </template>
       </Modal>
 
       <!-- Delete Clause Confirmation Modal -->
-      <Modal :show="showDeleteClauseConfirm" title="Delete Clause" @close="showDeleteClauseConfirm = false">
+      <Modal :show="showDeleteClauseConfirm" :title="t('specification.deleteClause')" @close="showDeleteClauseConfirm = false">
         <p class="text-sm text-gray-600">
-          Are you sure you want to delete clause <span class="font-semibold text-gray-900">{{ deleteClauseTitle }}</span>?
+          {{ t('specification.deleteClauseConfirm', { title: deleteClauseTitle }) }}
         </p>
         <div class="flex justify-end gap-3 mt-6">
-          <button class="btn-secondary" @click="showDeleteClauseConfirm = false">Cancel</button>
-          <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDeleteClause">Delete</button>
+          <button class="btn-secondary" @click="showDeleteClauseConfirm = false">{{ t('common.cancel') }}</button>
+          <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDeleteClause">{{ t('common.delete') }}</button>
         </div>
       </Modal>
     </template>
