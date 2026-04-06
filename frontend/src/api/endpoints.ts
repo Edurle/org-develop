@@ -85,6 +85,10 @@ export const reqApi = {
     api.post<Requirement>(`/projects/${projectId}/requirements`, data),
   updateStatus: (id: string, status: string) =>
     api.patch<Requirement>(`/requirements/${id}/status`, { status }),
+  update: (id: string, data: { title?: string; priority?: string }) =>
+    api.patch<Requirement>(`/requirements/${id}`, data),
+  delete: (id: string) =>
+    api.delete(`/requirements/${id}`),
 }
 
 // ── Specifications ──
@@ -115,6 +119,13 @@ export const specApi = {
     category: string; severity?: string
   }) =>
     api.post<SpecClause>(`/spec-versions/${versionId}/clauses`, data),
+  updateClause: (clauseId: string, data: {
+    clause_id?: string; title?: string; description?: string
+    category?: string; severity?: string
+  }) =>
+    api.patch<SpecClause>(`/spec-clauses/${clauseId}`, data),
+  deleteClause: (clauseId: string) =>
+    api.delete(`/spec-clauses/${clauseId}`),
 }
 
 // ── Tasks ──
@@ -132,6 +143,12 @@ export const taskApi = {
     api.patch<DevTask>(`/dev-tasks/${taskId}/claim`),
   updateDevTaskStatus: (taskId: string, status: string) =>
     api.patch<DevTask>(`/dev-tasks/${taskId}/status`, { status }),
+  updateDevTask: (taskId: string, data: {
+    title?: string; estimate_hours?: number | null; assignee_id?: string | null
+  }) =>
+    api.patch<DevTask>(`/dev-tasks/${taskId}`, data),
+  deleteDevTask: (taskId: string) =>
+    api.delete(`/dev-tasks/${taskId}`),
 
   // test tasks
   createTestTask: (reqId: string, data: { iteration_id: string; title: string }) =>
@@ -152,6 +169,13 @@ export const tcApi = {
     api.get<TestCase[]>(`/test-tasks/${testTaskId}/test-cases`),
   updateStatus: (tcId: string, status: string) =>
     api.patch<TestCase>(`/test-cases/${tcId}/status`, { status }),
+  update: (tcId: string, data: {
+    title?: string; preconditions?: string; steps?: string
+    expected_result?: string; actual_result?: string
+  }) =>
+    api.patch<TestCase>(`/test-cases/${tcId}`, data),
+  delete: (tcId: string) =>
+    api.delete(`/test-cases/${tcId}`),
 }
 
 // ── Coverage ──
