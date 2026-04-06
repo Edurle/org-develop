@@ -33,5 +33,20 @@ export const useTestcaseStore = defineStore('testcase', () => {
     return res.data
   }
 
-  return { testCases, fetchList, create, updateStatus }
+  async function update(tcId: string, data: {
+    title?: string; preconditions?: string; steps?: string
+    expected_result?: string; actual_result?: string
+  }) {
+    const res = await tcApi.update(tcId, data)
+    const idx = testCases.value.findIndex((tc) => tc.id === tcId)
+    if (idx !== -1) testCases.value[idx] = res.data
+    return res.data
+  }
+
+  async function remove(tcId: string) {
+    await tcApi.delete(tcId)
+    testCases.value = testCases.value.filter((tc) => tc.id !== tcId)
+  }
+
+  return { testCases, fetchList, create, updateStatus, update, remove }
 })

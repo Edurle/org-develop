@@ -76,6 +76,21 @@ export const useSpecificationStore = defineStore('specification', () => {
     return res.data
   }
 
+  async function updateClause(id: string, data: {
+    clause_id?: string; title?: string; description?: string
+    category?: string; severity?: string
+  }) {
+    const res = await specApi.updateClause(id, data)
+    const idx = clauses.value.findIndex((c) => c.id === id)
+    if (idx !== -1) clauses.value[idx] = res.data
+    return res.data
+  }
+
+  async function removeClause(id: string) {
+    await specApi.deleteClause(id)
+    clauses.value = clauses.value.filter((c) => c.id !== id)
+  }
+
   return {
     specs,
     currentSpec,
@@ -91,5 +106,7 @@ export const useSpecificationStore = defineStore('specification', () => {
     reject,
     fetchClauses,
     createClause,
+    updateClause,
+    removeClause,
   }
 })

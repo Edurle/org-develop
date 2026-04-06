@@ -31,5 +31,19 @@ export const useRequirementStore = defineStore('requirement', () => {
     return res.data
   }
 
-  return { requirements, currentRequirement, fetchList, fetchOne, create, updateStatus }
+  async function update(id: string, data: { title?: string; priority?: string }) {
+    const res = await reqApi.update(id, data)
+    const idx = requirements.value.findIndex((r) => r.id === id)
+    if (idx !== -1) requirements.value[idx] = res.data
+    if (currentRequirement.value?.id === id) currentRequirement.value = res.data
+    return res.data
+  }
+
+  async function remove(id: string) {
+    await reqApi.delete(id)
+    requirements.value = requirements.value.filter((r) => r.id !== id)
+    if (currentRequirement.value?.id === id) currentRequirement.value = null
+  }
+
+  return { requirements, currentRequirement, fetchList, fetchOne, create, updateStatus, update, remove }
 })

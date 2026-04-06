@@ -51,6 +51,20 @@ export const useTaskStore = defineStore('task', () => {
     return res.data
   }
 
+  async function updateDevTask(id: string, data: {
+    title?: string; estimate_hours?: number | null; assignee_id?: string | null
+  }) {
+    const res = await taskApi.updateDevTask(id, data)
+    const idx = devTasks.value.findIndex((t) => t.id === id)
+    if (idx !== -1) devTasks.value[idx] = res.data
+    return res.data
+  }
+
+  async function removeDevTask(id: string) {
+    await taskApi.deleteDevTask(id)
+    devTasks.value = devTasks.value.filter((t) => t.id !== id)
+  }
+
   return {
     devTasks,
     testTasks,
@@ -60,5 +74,7 @@ export const useTaskStore = defineStore('task', () => {
     claimDevTask,
     updateDevTaskStatus,
     createTestTask,
+    updateDevTask,
+    removeDevTask,
   }
 })
