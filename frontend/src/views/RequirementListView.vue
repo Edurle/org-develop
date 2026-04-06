@@ -6,7 +6,7 @@ import { useIterationStore } from '@/stores/iteration'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
-import type { Priority } from '@/types'
+import type { Priority, Requirement } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,6 +31,17 @@ const showCreateModal = ref(false)
 const newTitle = ref('')
 const newPriority = ref<Priority>('medium')
 const newIterationId = ref('')
+
+// Edit requirement modal
+const showEditModal = ref(false)
+const editId = ref('')
+const editTitle = ref('')
+const editPriority = ref<Priority>('medium')
+
+// Delete confirmation
+const showDeleteConfirm = ref(false)
+const deleteTargetId = ref('')
+const deleteTargetTitle = ref('')
 
 const loading = ref(false)
 const error = ref('')
@@ -88,6 +99,41 @@ async function handleCreate() {
     showCreateModal.value = false
   } catch (e: any) {
     error.value = e?.message || 'Failed to create requirement'
+  }
+}
+
+function openEditModal(req: Requirement) {
+  editId.value = req.id
+  editTitle.value = req.title
+  editPriority.value = req.priority
+  showEditModal.value = true
+}
+
+async function handleEdit() {
+  if (!editTitle.value.trim()) return
+  try {
+    await reqStore.update(editId.value, {
+      title: editTitle.value.trim(),
+      priority: editPriority.value,
+    })
+    showEditModal.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to update requirement'
+  }
+}
+
+function openDeleteConfirm(req: Requirement) {
+  deleteTargetId.value = req.id
+  deleteTargetTitle.value = req.title
+  showDeleteConfirm.value = true
+}
+
+async function handleDelete() {
+  try {
+    await reqStore.remove(deleteTargetId.value)
+    showDeleteConfirm.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to delete requirement'
   }
 }
 
@@ -212,12 +258,27 @@ onMounted(loadData)
             </td>
             <td class="px-4 py-3 text-gray-500">{{ formatDate(req.created_at) }}</td>
             <td class="px-4 py-3">
-              <button
-                class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors"
-                @click.stop="navigateToReq(req.id)"
-              >
-                View
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition-colors"
+                  @click.stop="navigateToReq(req.id)"
+                >
+                  View
+                </button>
+                <button
+                  class="text-gray-500 hover:text-gray-700 text-xs font-semibold transition-colors"
+                  @click.stop="openEditModal(req)"
+                >
+                  Edit
+                </button>
+                <button
+                  v-if="req.status === 'draft' || req.status === 'cancelled'"
+                  class="text-red-500 hover:text-red-700 text-xs font-semibold transition-colors"
+                  @click.stop="openDeleteConfirm(req)"
+                >
+                  Delete
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -276,6 +337,44 @@ onMounted(loadData)
         >
           Create
         </button>
+      </div>
+    </Modal>
+
+    <!-- Edit Requirement Modal -->
+    <Modal :show="showEditModal" title="Edit Requirement" @close="showEditModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input
+            v-model="editTitle"
+            type="text"
+            placeholder="Requirement title"
+            class="input-glass"
+            @keyup.enter="handleEdit"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <select v-model="editPriority" class="select-glass">
+            <option v-for="p in priorityOptions" :key="p" :value="p">{{ p.charAt(0).toUpperCase() + p.slice(1) }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showEditModal = false">Cancel</button>
+        <button class="btn-primary" :disabled="!editTitle.trim()" @click="handleEdit">Save</button>
+      </div>
+    </Modal>
+
+    <!-- Delete Confirmation Modal -->
+    <Modal :show="showDeleteConfirm" title="Delete Requirement" @close="showDeleteConfirm = false">
+      <p class="text-sm text-gray-600">
+        Are you sure you want to delete <span class="font-semibold text-gray-900">{{ deleteTargetTitle }}</span>?
+        This action cannot be undone.
+      </p>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showDeleteConfirm = false">Cancel</button>
+        <button class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors cursor-pointer" @click="handleDelete">Delete</button>
       </div>
     </Modal>
   </div>
