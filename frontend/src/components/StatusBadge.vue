@@ -14,6 +14,9 @@ const props = withDefaults(defineProps<{
 const badgeStyles: Record<string, { bg: string; text: string; border: string }> = {
   draft: { bg: 'bg-gradient-to-br from-gray-50 to-gray-100/50', text: 'text-gray-600', border: 'border-gray-200/60' },
   open: { bg: 'bg-gradient-to-br from-gray-50 to-gray-100/50', text: 'text-gray-600', border: 'border-gray-200/60' },
+  planning: { bg: 'bg-gradient-to-br from-gray-50 to-gray-100/50', text: 'text-gray-600', border: 'border-gray-200/60' },
+  active: { bg: 'bg-gradient-to-br from-blue-50 to-blue-100/50', text: 'text-blue-700', border: 'border-blue-200/60' },
+  completed: { bg: 'bg-gradient-to-br from-green-50 to-green-100/50', text: 'text-green-700', border: 'border-green-200/70' },
   spec_writing: { bg: 'bg-gradient-to-br from-blue-50 to-blue-100/50', text: 'text-blue-700', border: 'border-blue-200/60' },
   in_progress: { bg: 'bg-gradient-to-br from-blue-50 to-blue-100/50', text: 'text-blue-700', border: 'border-blue-300/70' },
   spec_review: { bg: 'bg-gradient-to-br from-amber-50 to-amber-100/50', text: 'text-amber-700', border: 'border-amber-200/60' },

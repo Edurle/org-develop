@@ -160,7 +160,8 @@
     "endDate": "结束日期",
     "create": "创建迭代",
     "active": "进行中",
-    "noIterations": "暂无迭代"
+    "noIterations": "暂无迭代",
+    "errorCreateFailed": "创建迭代失败"
   },
   "requirement": {
     "title": "需求",
@@ -312,7 +313,10 @@
     "failed": "失败",
     "rejected": "已驳回",
     "running": "运行中",
-    "pending": "待执行"
+    "pending": "待执行",
+    "planning": "规划中",
+    "active": "进行中",
+    "completed": "已完成"
   },
   "priority": {
     "low": "低",

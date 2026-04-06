@@ -6,6 +6,7 @@ import { useProjectStore } from '@/stores/project'
 import { useIterationStore } from '@/stores/iteration'
 import { useRequirementStore } from '@/stores/requirement'
 import StatusBadge from '@/components/StatusBadge.vue'
+import Modal from '@/components/Modal.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -25,9 +26,15 @@ const editName = ref('')
 const editDesc = ref('')
 const saving = ref(false)
 
+// Create iteration state
+const showCreateModal = ref(false)
+const newIterName = ref('')
+const newStartDate = ref('')
+const newEndDate = ref('')
+
 const project = computed(() => projectStore.currentProject)
 const activeIterations = computed(() =>
-  iterationStore.iterations.filter((i) => i.status === 'in_progress' || i.status === 'open')
+  iterationStore.iterations.filter((i) => i.status === 'planning' || i.status === 'active')
 )
 const recentRequirements = computed(() =>
   requirementStore.requirements.slice(0, 5)
@@ -72,6 +79,27 @@ async function saveDesc() {
     error.value = err?.response?.data?.detail || t('project.failedUpdateDesc')
   } finally {
     saving.value = false
+  }
+}
+
+function openCreateIterModal() {
+  newIterName.value = ''
+  newStartDate.value = ''
+  newEndDate.value = ''
+  showCreateModal.value = true
+}
+
+async function handleCreateIter() {
+  if (!newIterName.value.trim()) return
+  try {
+    await iterationStore.create(projectId, {
+      name: newIterName.value.trim(),
+      start_date: newStartDate.value || undefined,
+      end_date: newEndDate.value || undefined,
+    })
+    showCreateModal.value = false
+  } catch (err: any) {
+    error.value = err?.response?.data?.detail || t('iteration.errorCreateFailed')
   }
 }
 
@@ -210,8 +238,17 @@ onMounted(async () => {
 
       <!-- Active iterations -->
       <div class="glass-card overflow-hidden">
-        <div class="px-5 py-4 border-b border-blue-500/8">
+        <div class="px-5 py-4 border-b border-blue-500/8 flex items-center justify-between">
           <h2 class="text-sm font-bold text-gray-900">{{ t('project.activeIterations') }}</h2>
+          <button
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-white/80 border border-blue-500/10 text-gray-700 hover:bg-blue-50/80 hover:border-blue-500/20 transition-all"
+            @click="openCreateIterModal"
+          >
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            {{ t('iteration.newIteration') }}
+          </button>
         </div>
         <div v-if="activeIterations.length === 0" class="px-5 py-8 text-center text-sm text-gray-400">
           {{ t('project.noActiveIterations') }}
@@ -266,5 +303,34 @@ onMounted(async () => {
         </div>
       </div>
     </template>
+
+    <!-- Create iteration modal -->
+    <Modal :show="showCreateModal" :title="t('iteration.newIteration')" @close="showCreateModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('iteration.iterationName') }}</label>
+          <input
+            v-model="newIterName"
+            type="text"
+            class="input-glass"
+            @keyup.enter="handleCreateIter"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('iteration.startDate') }}</label>
+            <input v-model="newStartDate" type="date" class="input-glass" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('iteration.endDate') }}</label>
+            <input v-model="newEndDate" type="date" class="input-glass" />
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showCreateModal = false">{{ t('common.cancel') }}</button>
+        <button class="btn-primary" :disabled="!newIterName.trim()" @click="handleCreateIter">{{ t('iteration.create') }}</button>
+      </div>
+    </Modal>
   </div>
 </template>

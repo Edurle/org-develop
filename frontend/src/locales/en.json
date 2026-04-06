@@ -160,7 +160,8 @@
     "endDate": "End Date",
     "create": "Create Iteration",
     "active": "Active",
-    "noIterations": "No iterations yet"
+    "noIterations": "No iterations yet",
+    "errorCreateFailed": "Failed to create iteration"
   },
   "requirement": {
     "title": "Requirements",
@@ -312,7 +313,10 @@
     "failed": "Failed",
     "rejected": "Rejected",
     "running": "Running",
-    "pending": "Pending"
+    "pending": "Pending",
+    "planning": "Planning",
+    "active": "Active",
+    "completed": "Completed"
   },
   "priority": {
     "low": "Low",
