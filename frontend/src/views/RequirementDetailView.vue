@@ -10,7 +10,7 @@ import { useIterationStore } from '@/stores/iteration'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
-import type { SpecType } from '@/types'
+import type { SpecType, Priority, DevTask, TestCase } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,6 +46,36 @@ const newDevTaskEstimate = ref<number | null>(null)
 // Create test task modal
 const showCreateTestTaskModal = ref(false)
 const newTestTaskTitle = ref('')
+
+// Edit requirement modal
+const showEditReqModal = ref(false)
+const editReqTitle = ref('')
+const editReqPriority = ref<Priority>('medium')
+
+// Edit dev task modal
+const showEditDevTaskModal = ref(false)
+const editDevTaskId = ref('')
+const editDevTaskTitle = ref('')
+const editDevTaskEstimate = ref<number | null>(null)
+
+// Delete dev task confirmation
+const showDeleteDevTaskConfirm = ref(false)
+const deleteDevTaskId = ref('')
+const deleteDevTaskTitle = ref('')
+
+// Edit test case modal
+const showEditTcModal = ref(false)
+const editTcId = ref('')
+const editTcTitle = ref('')
+const editTcPreconditions = ref('')
+const editTcSteps = ref('')
+const editTcExpected = ref('')
+const editTcActual = ref('')
+
+// Delete test case confirmation
+const showDeleteTcConfirm = ref(false)
+const deleteTcId = ref('')
+const deleteTcTitle = ref('')
 
 // Coverage check
 const coverageSufficient = ref<boolean | null>(null)
@@ -223,6 +253,105 @@ watch(activeTab, (tab) => {
   }
 })
 
+// Requirement edit
+function openEditReqModal() {
+  if (!currentReq.value) return
+  editReqTitle.value = currentReq.value.title
+  editReqPriority.value = currentReq.value.priority
+  showEditReqModal.value = true
+}
+
+async function handleEditReq() {
+  if (!editReqTitle.value.trim()) return
+  try {
+    await reqStore.update(currentReq.value!.id, {
+      title: editReqTitle.value.trim(),
+      priority: editReqPriority.value,
+    })
+    showEditReqModal.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to update requirement'
+  }
+}
+
+// Dev task edit/delete
+function openEditDevTaskModal(task: DevTask) {
+  editDevTaskId.value = task.id
+  editDevTaskTitle.value = task.title
+  editDevTaskEstimate.value = task.estimate_hours
+  showEditDevTaskModal.value = true
+}
+
+async function handleEditDevTask() {
+  if (!editDevTaskTitle.value.trim()) return
+  try {
+    await taskStore.updateDevTask(editDevTaskId.value, {
+      title: editDevTaskTitle.value.trim(),
+      estimate_hours: editDevTaskEstimate.value,
+    })
+    showEditDevTaskModal.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to update dev task'
+  }
+}
+
+function openDeleteDevTaskConfirm(task: DevTask) {
+  deleteDevTaskId.value = task.id
+  deleteDevTaskTitle.value = task.title
+  showDeleteDevTaskConfirm.value = true
+}
+
+async function handleDeleteDevTask() {
+  try {
+    await taskStore.removeDevTask(deleteDevTaskId.value)
+    showDeleteDevTaskConfirm.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to delete dev task'
+  }
+}
+
+// Test case edit/delete
+function openEditTcModal(tc: TestCase) {
+  editTcId.value = tc.id
+  editTcTitle.value = tc.title
+  editTcPreconditions.value = tc.preconditions ?? ''
+  editTcSteps.value = tc.steps
+  editTcExpected.value = tc.expected_result
+  editTcActual.value = tc.actual_result ?? ''
+  showEditTcModal.value = true
+}
+
+async function handleEditTc() {
+  if (!editTcTitle.value.trim()) return
+  try {
+    await tcStore.update(editTcId.value, {
+      title: editTcTitle.value.trim(),
+      preconditions: editTcPreconditions.value || undefined,
+      steps: editTcSteps.value,
+      expected_result: editTcExpected.value,
+      actual_result: editTcActual.value || undefined,
+    })
+    showEditTcModal.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to update test case'
+  }
+}
+
+function openDeleteTcConfirm(tc: TestCase) {
+  deleteTcId.value = tc.id
+  deleteTcTitle.value = tc.title
+  showDeleteTcConfirm.value = true
+}
+
+async function handleDeleteTc() {
+  try {
+    await tcStore.remove(deleteTcId.value)
+    showDeleteTcConfirm.value = false
+  } catch (e: any) {
+    error.value = e?.message || 'Failed to delete test case'
+  }
+}
+
 function navigateToSpec(specId: string) {
   router.push(`/projects/${projectId.value}/requirements/${reqId.value}/specs/${specId}`)
 }
@@ -274,6 +403,15 @@ onMounted(loadAll)
           <span :class="['badge-base', priorityColorMap[currentReq.priority] ?? 'bg-gradient-to-br from-gray-50 to-gray-100/50 text-gray-600 border-gray-200/60']">
             {{ currentReq.priority.charAt(0).toUpperCase() + currentReq.priority.slice(1) }}
           </span>
+          <button
+            class="text-sm text-gray-400 hover:text-gray-600 transition-colors ml-2"
+            @click="openEditReqModal"
+            title="Edit requirement"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
         </div>
 
         <!-- Status transition buttons -->
@@ -418,6 +556,7 @@ onMounted(loadAll)
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Assignee</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Est. Hours</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Created</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-blue-500/5">
@@ -431,6 +570,23 @@ onMounted(loadAll)
                 <td class="px-4 py-3 text-gray-500">{{ task.assignee_id ?? 'Unassigned' }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ task.estimate_hours ?? '-' }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      @click="openEditDevTaskModal(task)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      v-if="task.status === 'open'"
+                      class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+                      @click="openDeleteDevTaskConfirm(task)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -493,6 +649,21 @@ onMounted(loadAll)
                   <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-700">{{ tc.title }}</span>
                     <StatusBadge :status="tc.status" size="sm" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      @click.stop="openEditTcModal(tc)"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      v-if="tc.status === 'pending'"
+                      class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors"
+                      @click.stop="openDeleteTcConfirm(tc)"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
@@ -744,6 +915,142 @@ onMounted(loadAll)
         >
           Create
         </button>
+      </div>
+    </Modal>
+
+    <!-- Edit Requirement Modal -->
+    <Modal :show="showEditReqModal" title="Edit Requirement" @close="showEditReqModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input
+            v-model="editReqTitle"
+            type="text"
+            placeholder="Requirement title"
+            class="input-glass"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <select v-model="editReqPriority" class="select-glass">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showEditReqModal = false">Cancel</button>
+        <button class="btn-primary" :disabled="!editReqTitle.trim()" @click="handleEditReq">Save</button>
+      </div>
+    </Modal>
+
+    <!-- Edit Dev Task Modal -->
+    <Modal :show="showEditDevTaskModal" title="Edit Dev Task" @close="showEditDevTaskModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input
+            v-model="editDevTaskTitle"
+            type="text"
+            placeholder="Dev task title"
+            class="input-glass"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Estimate Hours</label>
+          <input
+            v-model.number="editDevTaskEstimate"
+            type="number"
+            min="0"
+            placeholder="Optional"
+            class="input-glass"
+          />
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showEditDevTaskModal = false">Cancel</button>
+        <button class="btn-primary" :disabled="!editDevTaskTitle.trim()" @click="handleEditDevTask">Save</button>
+      </div>
+    </Modal>
+
+    <!-- Delete Dev Task Confirmation -->
+    <Modal :show="showDeleteDevTaskConfirm" title="Delete Dev Task" @close="showDeleteDevTaskConfirm = false">
+      <p class="text-sm text-gray-600">
+        Are you sure you want to delete <span class="font-semibold">{{ deleteDevTaskTitle }}</span
+        >? This action cannot be undone.
+      </p>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showDeleteDevTaskConfirm = false">Cancel</button>
+        <button class="btn-danger" @click="handleDeleteDevTask">Delete</button>
+      </div>
+    </Modal>
+
+    <!-- Edit Test Case Modal -->
+    <Modal :show="showEditTcModal" title="Edit Test Case" @close="showEditTcModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input
+            v-model="editTcTitle"
+            type="text"
+            placeholder="Test case title"
+            class="input-glass"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Preconditions</label>
+          <textarea
+            v-model="editTcPreconditions"
+            placeholder="Optional preconditions"
+            class="input-glass"
+            rows="2"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Steps</label>
+          <textarea
+            v-model="editTcSteps"
+            placeholder="Test steps"
+            class="input-glass"
+            rows="3"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Expected Result</label>
+          <textarea
+            v-model="editTcExpected"
+            placeholder="Expected result"
+            class="input-glass"
+            rows="2"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Actual Result</label>
+          <textarea
+            v-model="editTcActual"
+            placeholder="Optional actual result"
+            class="input-glass"
+            rows="2"
+          ></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showEditTcModal = false">Cancel</button>
+        <button class="btn-primary" :disabled="!editTcTitle.trim()" @click="handleEditTc">Save</button>
+      </div>
+    </Modal>
+
+    <!-- Delete Test Case Confirmation -->
+    <Modal :show="showDeleteTcConfirm" title="Delete Test Case" @close="showDeleteTcConfirm = false">
+      <p class="text-sm text-gray-600">
+        Are you sure you want to delete <span class="font-semibold">{{ deleteTcTitle }}</span
+        >? This action cannot be undone.
+      </p>
+      <div class="flex justify-end gap-3 mt-6">
+        <button class="btn-secondary" @click="showDeleteTcConfirm = false">Cancel</button>
+        <button class="btn-danger" @click="handleDeleteTc">Delete</button>
       </div>
     </Modal>
   </div>
