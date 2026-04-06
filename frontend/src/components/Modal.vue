@@ -33,7 +33,7 @@ watch(() => props.show, (value) => {
         />
 
         <!-- Modal card -->
-        <div class="relative bg-white/90 backdrop-blur-xl rounded-[20px] shadow-glass-lg border border-blue-500/8 w-full max-w-md mx-4">
+        <div class="relative bg-white/90 backdrop-blur-xl rounded-[20px] shadow-glass-lg border border-blue-500/8 w-full max-w-lg mx-4">
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-blue-500/8">
             <h2 class="text-base font-bold text-gray-900">{{ title }}</h2>
