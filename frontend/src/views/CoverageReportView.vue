@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useCoverageStore } from '@/stores/coverage'
 import EmptyState from '@/components/EmptyState.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const coverageStore = useCoverageStore()
 
 const reqId = computed(() => route.params.reqId as string)
@@ -24,7 +26,7 @@ async function loadData() {
   try {
     await coverageStore.fetchReport(reqId.value)
   } catch (e: any) {
-    error.value = e?.message || 'Failed to load coverage report'
+    error.value = e?.message || t('coverage.loadFailed')
   } finally {
     loading.value = false
   }
@@ -63,7 +65,7 @@ onMounted(loadData)
   <div class="max-w-6xl mx-auto">
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-xl font-bold text-gray-900">Coverage Report</h1>
+      <h1 class="text-xl font-bold text-gray-900">{{ t('coverage.reportTitle') }}</h1>
     </div>
 
     <!-- Error -->
@@ -72,33 +74,33 @@ onMounted(loadData)
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="py-12 text-center text-gray-500">Loading...</div>
+    <div v-if="loading" class="py-12 text-center text-gray-500">{{ t('coverage.loadingCoverage') }}</div>
 
     <template v-else-if="coverageStore.report">
       <!-- Summary cards -->
       <div class="grid grid-cols-3 gap-3 mb-6">
         <div class="glass-card p-6 text-center">
           <div class="text-2xl font-bold text-gray-900">{{ coverageStore.report.total_clauses }}</div>
-          <div class="text-xs text-gray-500 mt-1">Total Clauses</div>
+          <div class="text-xs text-gray-500 mt-1">{{ t('coverage.totalClauses') }}</div>
         </div>
         <div class="glass-card p-6 text-center">
           <div class="text-2xl font-bold text-emerald-600">{{ coverageStore.report.covered_clauses }}</div>
-          <div class="text-xs text-gray-500 mt-1">Covered</div>
+          <div class="text-xs text-gray-500 mt-1">{{ t('coverage.covered') }}</div>
         </div>
         <div class="glass-card p-6 text-center">
           <div class="text-2xl font-bold text-blue-600">{{ overallPct }}%</div>
-          <div class="text-xs text-gray-500 mt-1">Overall Coverage</div>
+          <div class="text-xs text-gray-500 mt-1">{{ t('coverage.overallCoverage') }}</div>
         </div>
       </div>
 
       <!-- Progress bars by severity -->
       <div class="glass-card p-6 mb-6">
-        <h2 class="text-sm font-bold text-gray-900 mb-5">Coverage by Severity</h2>
+        <h2 class="text-sm font-bold text-gray-900 mb-5">{{ t('coverage.coverageBySeverity') }}</h2>
         <div class="space-y-5">
           <!-- MUST -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm font-semibold text-gray-700">MUST</span>
+              <span class="text-sm font-semibold text-gray-700">{{ t('severity.must') }}</span>
               <span :class="['text-xs font-bold', mustTextColor(coverageStore.report.must_coverage_pct)]">
                 {{ coverageStore.report.must_coverage_pct.toFixed(1) }}%
               </span>
@@ -109,13 +111,13 @@ onMounted(loadData)
                 :style="{ width: Math.max(coverageStore.report.must_coverage_pct, 0) + '%' }"
               />
             </div>
-            <p class="text-[11px] text-gray-400 mt-1">100% required -- any gap is a risk</p>
+            <p class="text-[11px] text-gray-400 mt-1">{{ t('coverage.mustRequired') }}</p>
           </div>
 
           <!-- SHOULD -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm font-semibold text-gray-700">SHOULD</span>
+              <span class="text-sm font-semibold text-gray-700">{{ t('severity.should') }}</span>
               <span :class="['text-xs font-bold', shouldTextColor(coverageStore.report.should_coverage_pct)]">
                 {{ coverageStore.report.should_coverage_pct.toFixed(1) }}%
               </span>
@@ -126,13 +128,13 @@ onMounted(loadData)
                 :style="{ width: Math.max(coverageStore.report.should_coverage_pct, 0) + '%' }"
               />
             </div>
-            <p class="text-[11px] text-gray-400 mt-1">Target >= 80%, warning below 50%</p>
+            <p class="text-[11px] text-gray-400 mt-1">{{ t('coverage.shouldTarget') }}</p>
           </div>
 
           <!-- MAY -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm font-semibold text-gray-700">MAY</span>
+              <span class="text-sm font-semibold text-gray-700">{{ t('severity.may') }}</span>
               <span class="text-xs font-bold text-gray-400">{{ coverageStore.report.may_coverage_pct.toFixed(1) }}%</span>
             </div>
             <div class="w-full bg-gray-100 rounded-full h-2.5">
@@ -141,7 +143,7 @@ onMounted(loadData)
                 :style="{ width: Math.max(coverageStore.report.may_coverage_pct, 0) + '%' }"
               />
             </div>
-            <p class="text-[11px] text-gray-400 mt-1">Not enforced -- informational only</p>
+            <p class="text-[11px] text-gray-400 mt-1">{{ t('coverage.mayInfo') }}</p>
           </div>
         </div>
       </div>
@@ -150,23 +152,23 @@ onMounted(loadData)
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-3 border-b border-blue-500/8">
           <h2 class="text-sm font-bold text-gray-900">
-            Uncovered Clauses ({{ coverageStore.report.uncovered_clauses.length }})
+            {{ t('coverage.uncoveredClauses') }} ({{ coverageStore.report.uncovered_clauses.length }})
           </h2>
         </div>
 
         <EmptyState
           v-if="coverageStore.report.uncovered_clauses.length === 0"
-          title="All clauses covered"
-          description="Every specification clause has associated test coverage."
+          :title="t('coverage.allClausesCovered')"
+          :description="t('coverage.allClausesCoveredDesc')"
         />
 
         <table v-else class="w-full text-sm">
           <thead>
             <tr class="border-b border-blue-500/5">
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Clause ID</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Title</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Severity</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">Category</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('coverage.clauseId') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('common.title') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('coverage.severity') }}</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500">{{ t('coverage.category') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-blue-500/5">
@@ -179,7 +181,7 @@ onMounted(loadData)
               <td class="px-5 py-3 text-gray-900">{{ clause.title }}</td>
               <td class="px-5 py-3">
                 <span :class="['badge-base', severityColorMap[clause.severity] ?? 'bg-gray-50 text-gray-600 border-gray-200/60']">
-                  {{ clause.severity.toUpperCase() }}
+                  {{ t(`severity.${clause.severity}`) }}
                 </span>
               </td>
               <td class="px-5 py-3 text-gray-500">{{ clause.category }}</td>
