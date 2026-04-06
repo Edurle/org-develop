@@ -69,14 +69,14 @@ onMounted(loadData)
     </div>
 
     <!-- Tabs -->
-    <div class="border-b border-blue-500/8">
-      <nav class="flex gap-6">
+    <div>
+      <nav class="flex gap-3">
         <button
           :class="[
-            'pb-3 text-sm font-medium border-b-2 transition-colors',
+            'px-5 py-2.5 text-sm font-medium rounded-full border transition-all backdrop-blur-sm',
             activeTab === 'dev'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700',
+              ? 'bg-white/60 border-white/50 text-blue-600 shadow-[0_2px_8px_rgba(59,130,246,0.12)]'
+              : 'bg-white/30 border-white/30 text-gray-500 hover:bg-white/40 hover:text-gray-700',
           ]"
           @click="activeTab = 'dev'"
         >
@@ -84,10 +84,10 @@ onMounted(loadData)
         </button>
         <button
           :class="[
-            'pb-3 text-sm font-medium border-b-2 transition-colors',
+            'px-5 py-2.5 text-sm font-medium rounded-full border transition-all backdrop-blur-sm',
             activeTab === 'test'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700',
+              ? 'bg-white/60 border-white/50 text-blue-600 shadow-[0_2px_8px_rgba(59,130,246,0.12)]'
+              : 'bg-white/30 border-white/30 text-gray-500 hover:bg-white/40 hover:text-gray-700',
           ]"
           @click="activeTab = 'test'"
         >
