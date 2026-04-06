@@ -9,7 +9,7 @@ from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models.testcase import TestCase
 from app.models.user import User
-from app.schemas.testcase import TestCaseResponse
+from app.schemas.testcase import TestCaseResponse, TestCaseUpdate
 from app.services import testcase as testcase_svc
 
 router = APIRouter(prefix="/api", tags=["testcases"])
@@ -89,3 +89,44 @@ async def update_test_case_status(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return TestCaseResponse.model_validate(tc).model_dump()
+
+
+@router.patch(
+    "/test-cases/{test_case_id}",
+    response_model=TestCaseResponse,
+)
+async def update_test_case(
+    test_case_id: str,
+    body: TestCaseUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    update_data = body.model_dump(exclude_unset=True)
+    update_data.pop("status", None)
+    try:
+        tc = await testcase_svc.update_test_case(
+            db,
+            test_case_id=test_case_id,
+            user_id=user.id,
+            **update_data,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    return TestCaseResponse.model_validate(tc).model_dump()
+
+
+@router.delete(
+    "/test-cases/{test_case_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_test_case(
+    test_case_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await testcase_svc.delete_test_case(
+            db, test_case_id=test_case_id, user_id=user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

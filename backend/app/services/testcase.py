@@ -124,3 +124,70 @@ async def update_test_case_status(
         detail=f"Status changed to '{new_status}'",
     )
     return test_case
+
+
+async def update_test_case(
+    db: AsyncSession,
+    test_case_id: str,
+    user_id: str | None = None,
+    title: str | None = None,
+    preconditions: str | None = None,
+    steps: str | None = None,
+    expected_result: str | None = None,
+    actual_result: str | None = None,
+) -> TestCase:
+    """Update editable fields on a test case."""
+    result = await db.execute(
+        select(TestCase).where(TestCase.id == test_case_id)
+    )
+    test_case = result.scalars().first()
+    if test_case is None:
+        raise ValueError(f"TestCase '{test_case_id}' not found")
+
+    if title is not None:
+        test_case.title = title
+    if preconditions is not None:
+        test_case.preconditions = preconditions
+    if steps is not None:
+        test_case.steps = steps
+    if expected_result is not None:
+        test_case.expected_result = expected_result
+    if actual_result is not None:
+        test_case.actual_result = actual_result
+
+    await db.flush()
+    await db.refresh(test_case)
+    await log_action(
+        db, user_id=user_id, action="testcase.update",
+        resource_type="test_case", resource_id=test_case.id,
+        detail=f"Updated test case '{test_case.title}'",
+    )
+    return test_case
+
+
+async def delete_test_case(
+    db: AsyncSession,
+    test_case_id: str,
+    user_id: str | None = None,
+) -> None:
+    """Delete a test case. Only allowed when status is 'pending'."""
+    result = await db.execute(
+        select(TestCase).where(TestCase.id == test_case_id)
+    )
+    test_case = result.scalars().first()
+    if test_case is None:
+        raise ValueError(f"TestCase '{test_case_id}' not found")
+
+    if test_case.status != "pending":
+        raise ValueError(
+            f"Cannot delete test case in '{test_case.status}' status. "
+            "Only 'pending' test cases can be deleted."
+        )
+
+    await log_action(
+        db, user_id=user_id, action="testcase.delete",
+        resource_type="test_case", resource_id=test_case.id,
+        detail=f"Deleted test case '{test_case.title}'",
+    )
+    await db.delete(test_case)
+    await db.flush()
