@@ -26,7 +26,7 @@ export default defineConfig({
     'btn-ghost': 'bg-blue-50 text-blue-600 rounded-[10px] font-medium hover:bg-blue-100 transition-all duration-150 cursor-pointer',
     'btn-danger': 'bg-gradient-to-br from-red-500 to-red-600 text-white rounded-[10px] font-semibold shadow-[0_2px_8px_rgba(239,68,68,0.3)] hover:shadow-[0_4px_16px_rgba(239,68,68,0.4)] hover:-translate-y-px transition-all duration-150 cursor-pointer',
     'badge-base': 'px-2.5 py-1 rounded-full text-xs font-semibold border inline-flex items-center',
-    'input-glass': 'w-full px-3.5 py-2.5 bg-white/70 backdrop-blur-sm border border-blue-500/12 rounded-[10px] text-sm outline-none focus:border-blue-500/30 focus:ring-2 focus:ring-blue-500/10 transition-all duration-150',
-    'select-glass': 'w-full px-3.5 py-2.5 bg-white/70 backdrop-blur-sm border border-blue-500/12 rounded-[10px] text-sm outline-none focus:border-blue-500/30 focus:ring-2 focus:ring-blue-500/10 transition-all duration-150 cursor-pointer',
+    'input-glass': 'w-full max-w-full box-border px-3.5 py-2.5 bg-white/70 backdrop-blur-sm border border-blue-500/12 rounded-[10px] text-sm outline-none focus:border-blue-500/30 focus:ring-2 focus:ring-blue-500/10 transition-all duration-150',
+    'select-glass': 'w-full max-w-full box-border px-3.5 py-2.5 bg-white/70 backdrop-blur-sm border border-blue-500/12 rounded-[10px] text-sm outline-none focus:border-blue-500/30 focus:ring-2 focus:ring-blue-500/10 transition-all duration-150 cursor-pointer',
   },
 })
