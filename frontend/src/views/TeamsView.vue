@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { orgApi, teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import type { Organization, Team } from '@/types'
+
+const { t } = useI18n()
 
 const loading = ref(true)
 const orgs = ref<Organization[]>([])
@@ -50,14 +53,14 @@ async function handleCreateOrg() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
     if (!orgForm.value.name.trim()) {
-      orgError.value = 'Organization name is required.'
+      orgError.value = t('team.organizationName')
       return
     }
     const res = await orgApi.create({ name: orgForm.value.name.trim(), slug })
     orgs.value.push(res.data)
     showNewOrgModal.value = false
   } catch (err: any) {
-    orgError.value = err?.response?.data?.detail || err?.message || 'Failed to create organization.'
+    orgError.value = err?.response?.data?.detail || err?.message || t('team.failedCreateOrg')
   } finally {
     creatingOrg.value = false
   }
@@ -72,11 +75,11 @@ async function handleCreateTeam() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
     if (!teamForm.value.name.trim()) {
-      teamError.value = 'Team name is required.'
+      teamError.value = t('team.teamNameRequired')
       return
     }
     if (!teamForm.value.org_id) {
-      teamError.value = 'Please select an organization.'
+      teamError.value = t('team.selectOrganization')
       return
     }
     const res = await teamApi.create({
@@ -87,7 +90,7 @@ async function handleCreateTeam() {
     teams.value.push(res.data)
     showNewTeamModal.value = false
   } catch (err: any) {
-    teamError.value = err?.response?.data?.detail || err?.message || 'Failed to create team.'
+    teamError.value = err?.response?.data?.detail || err?.message || t('team.failedCreateTeam')
   } finally {
     creatingTeam.value = false
   }
@@ -114,8 +117,8 @@ onMounted(async () => {
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Teams &amp; Organizations</h1>
-        <p class="mt-1 text-sm text-gray-500">Manage organizations and their teams.</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ t('team.title') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ t('team.subtitle') }}</p>
       </div>
     </div>
 
@@ -131,9 +134,9 @@ onMounted(async () => {
     <!-- Empty state -->
     <EmptyState
       v-else-if="orgs.length === 0"
-      title="No organizations yet"
-      description="Create an organization to start managing teams."
-      action-label="New Organization"
+      :title="t('team.noOrganizations')"
+      :description="t('team.noOrganizationsDesc')"
+      :action-label="t('team.newOrganization')"
       @action="openNewOrgModal"
     />
 
@@ -148,13 +151,13 @@ onMounted(async () => {
         <div class="flex items-center justify-between px-5 py-4 border-b border-blue-500/8">
           <div>
             <h2 class="text-sm font-bold text-gray-900">{{ org.name }}</h2>
-            <p class="text-xs text-gray-400 mt-0.5">{{ org.slug }} &middot; Created {{ formatDate(org.created_at) }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">{{ org.slug }} &middot; {{ t('common.createdAt', { date: formatDate(org.created_at) }) }}</p>
           </div>
           <button
             class="btn-ghost px-3 py-1.5 text-xs"
             @click="openNewTeamModal(org.id)"
           >
-            + Team
+            {{ t('team.addTeam') }}
           </button>
         </div>
 
@@ -175,7 +178,7 @@ onMounted(async () => {
             v-if="teamsForOrg(org.id).length === 0"
             class="px-5 py-4 text-sm text-gray-400 text-center"
           >
-            No teams yet. Click "+ Team" to add one.
+            {{ t('team.noTeamsYet') }}
           </div>
         </div>
       </div>
@@ -186,20 +189,20 @@ onMounted(async () => {
           class="btn-secondary px-5 py-2.5 text-sm"
           @click="openNewOrgModal"
         >
-          New Organization
+          {{ t('team.newOrganization') }}
         </button>
       </div>
     </div>
 
     <!-- New Org Modal -->
-    <Modal :show="showNewOrgModal" title="New Organization" @close="showNewOrgModal = false">
+    <Modal :show="showNewOrgModal" :title="t('team.newOrganization')" @close="showNewOrgModal = false">
       <form @submit.prevent="handleCreateOrg" class="space-y-4">
         <div v-if="orgError" class="p-3 bg-red-50 border border-red-200/60 rounded-[10px] text-sm text-red-700">
           {{ orgError }}
         </div>
 
         <div>
-          <label for="org-name" class="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
+          <label for="org-name" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.name') }}</label>
           <input
             id="org-name"
             v-model="orgForm.name"
@@ -211,7 +214,7 @@ onMounted(async () => {
         </div>
 
         <div>
-          <label for="org-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">Slug</label>
+          <label for="org-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.slug') }}</label>
           <input
             id="org-slug"
             v-model="orgForm.slug"
@@ -219,7 +222,7 @@ onMounted(async () => {
             class="input-glass"
             placeholder="auto-generated-from-name"
           />
-          <p class="mt-1 text-xs text-gray-400">Leave empty to auto-generate from name.</p>
+          <p class="mt-1 text-xs text-gray-400">{{ t('common.autoSlug') }}</p>
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
@@ -228,41 +231,41 @@ onMounted(async () => {
             class="btn-secondary px-4 py-2 text-sm"
             @click="showNewOrgModal = false"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="creatingOrg"
             class="btn-primary px-5 py-2 text-sm"
           >
-            {{ creatingOrg ? 'Creating...' : 'Create Organization' }}
+            {{ creatingOrg ? t('common.creating') : t('team.createOrganization') }}
           </button>
         </div>
       </form>
     </Modal>
 
     <!-- New Team Modal -->
-    <Modal :show="showNewTeamModal" title="New Team" @close="showNewTeamModal = false">
+    <Modal :show="showNewTeamModal" :title="t('team.newTeam')" @close="showNewTeamModal = false">
       <form @submit.prevent="handleCreateTeam" class="space-y-4">
         <div v-if="teamError" class="p-3 bg-red-50 border border-red-200/60 rounded-[10px] text-sm text-red-700">
           {{ teamError }}
         </div>
 
         <div>
-          <label for="team-org" class="block text-xs font-semibold text-gray-600 mb-1.5">Organization</label>
+          <label for="team-org" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('team.title') }}</label>
           <select
             id="team-org"
             v-model="teamForm.org_id"
             required
             class="select-glass"
           >
-            <option value="" disabled>Select an organization</option>
+            <option value="" disabled>{{ t('team.selectAnOrganization') }}</option>
             <option v-for="org in orgs" :key="org.id" :value="org.id">{{ org.name }}</option>
           </select>
         </div>
 
         <div>
-          <label for="team-name" class="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
+          <label for="team-name" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.name') }}</label>
           <input
             id="team-name"
             v-model="teamForm.name"
@@ -274,7 +277,7 @@ onMounted(async () => {
         </div>
 
         <div>
-          <label for="team-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">Slug</label>
+          <label for="team-slug" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('common.slug') }}</label>
           <input
             id="team-slug"
             v-model="teamForm.slug"
@@ -282,7 +285,7 @@ onMounted(async () => {
             class="input-glass"
             placeholder="auto-generated-from-name"
           />
-          <p class="mt-1 text-xs text-gray-400">Leave empty to auto-generate from name.</p>
+          <p class="mt-1 text-xs text-gray-400">{{ t('common.autoSlug') }}</p>
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
@@ -291,14 +294,14 @@ onMounted(async () => {
             class="btn-secondary px-4 py-2 text-sm"
             @click="showNewTeamModal = false"
           >
-            Cancel
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             :disabled="creatingTeam"
             class="btn-primary px-5 py-2 text-sm"
           >
-            {{ creatingTeam ? 'Creating...' : 'Create Team' }}
+            {{ creatingTeam ? t('common.creating') : t('team.createTeam') }}
           </button>
         </div>
       </form>
