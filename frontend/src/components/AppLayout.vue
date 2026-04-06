@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { currentLocale, toggleLocale } from '@/locales'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,6 +62,12 @@ async function handleLogout() {
 
       <!-- Right: User -->
       <div class="ml-auto flex items-center gap-3">
+        <button
+          class="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+          @click="toggleLocale"
+        >
+          {{ currentLocale() === 'en' ? '中文' : 'EN' }}
+        </button>
         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
           {{ (authStore.username || 'U').charAt(0).toUpperCase() }}
         </div>
@@ -69,7 +76,7 @@ async function handleLogout() {
           class="text-xs text-gray-400 hover:text-gray-600 transition-colors ml-2"
           @click="handleLogout"
         >
-          Logout
+          {{ $t('common.logout') }}
         </button>
       </div>
     </header>
