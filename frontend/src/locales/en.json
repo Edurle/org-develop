@@ -49,7 +49,7 @@
     "displayName": "Display Name",
     "confirmPassword": "Confirm Password",
     "chooseUsername": "Choose a username",
-    "emailPlaceholder": "you@example.com",
+    "emailPlaceholder": "you{'@'}example.com",
     "displayNamePlaceholder": "How should we call you?",
     "passwordMin": "At least 6 characters",
     "repeatPassword": "Repeat your password",

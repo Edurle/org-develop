@@ -49,7 +49,7 @@
     "displayName": "显示名称",
     "confirmPassword": "确认密码",
     "chooseUsername": "选择用户名",
-    "emailPlaceholder": "you@example.com",
+    "emailPlaceholder": "you{'@'}example.com",
     "displayNamePlaceholder": "我们该怎么称呼您？",
     "passwordMin": "至少 6 个字符",
     "repeatPassword": "再次输入密码",
