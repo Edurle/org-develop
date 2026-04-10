@@ -421,11 +421,11 @@ onMounted(loadAll)
           <button
             v-for="action in statusActions"
             :key="action.status"
-            class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            class="px-4 py-2 text-sm font-medium transition-all duration-150"
             :class="action.status === 'spec_rejected'
               ? 'btn-danger'
               : action.status === 'done'
-                ? 'text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                ? 'bg-green-500/15 backdrop-blur-sm text-green-600 border border-green-500/20 rounded-full font-semibold hover:bg-green-500/25 hover:border-green-500/40 hover:-translate-y-px cursor-pointer'
                 : 'btn-primary'"
             @click="handleStatusTransition(action.status)"
           >
@@ -435,16 +435,16 @@ onMounted(loadAll)
       </div>
 
       <!-- Tabs -->
-      <div class="border-b border-blue-500/8 mb-6">
-        <nav class="flex gap-6">
+      <div class="mb-6">
+        <nav class="flex gap-3">
           <button
             v-for="tab in (['specs', 'dev', 'test', 'coverage'] as const)"
             :key="tab"
             :class="[
-              'pb-3 text-sm font-medium border-b-2 transition-colors',
+              'px-5 py-2.5 text-sm font-medium rounded-full border transition-all backdrop-blur-sm',
               activeTab === tab
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700',
+                ? 'bg-white/60 border-white/50 text-blue-600 shadow-[0_2px_8px_rgba(59,130,246,0.12)]'
+                : 'bg-white/30 border-white/30 text-gray-500 hover:bg-white/40 hover:text-gray-700',
             ]"
             @click="activeTab = tab"
           >

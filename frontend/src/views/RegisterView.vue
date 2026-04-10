@@ -178,7 +178,7 @@ async function handleRegister() {
         <button
           type="submit"
           :disabled="loading || passwordMismatch"
-          class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-blue-600 to-blue-700 rounded-[10px] shadow-[0_2px_12px_rgba(37,99,235,0.4)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.5)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 mt-2"
+          class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-blue-600 to-blue-700 rounded-full shadow-[0_2px_12px_rgba(37,99,235,0.4)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.5)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 mt-2"
         >
           <svg
             v-if="loading"
