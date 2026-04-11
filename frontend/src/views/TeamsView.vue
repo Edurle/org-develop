@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { orgApi, teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { Organization, Team } from '@/types'
 
 const { t } = useI18n()
@@ -153,12 +154,9 @@ onMounted(async () => {
             <h2 class="text-sm font-bold text-gray-900">{{ org.name }}</h2>
             <p class="text-xs text-gray-400 mt-0.5">{{ org.slug }} &middot; {{ t('common.createdAt', { date: formatDate(org.created_at) }) }}</p>
           </div>
-          <button
-            class="btn-ghost px-3 py-1.5 text-xs"
-            @click="openNewTeamModal(org.id)"
-          >
+          <GlassButton variant="ghost" size="small" @click="openNewTeamModal(org.id)">
             {{ t('team.addTeam') }}
-          </button>
+          </GlassButton>
         </div>
 
         <!-- Teams under this org -->
@@ -185,12 +183,9 @@ onMounted(async () => {
 
       <!-- New org button at the bottom -->
       <div class="flex justify-center">
-        <button
-          class="btn-secondary px-5 py-2.5 text-sm"
-          @click="openNewOrgModal"
-        >
+        <GlassButton variant="secondary" size="large" @click="openNewOrgModal">
           {{ t('team.newOrganization') }}
-        </button>
+        </GlassButton>
       </div>
     </div>
 
@@ -226,20 +221,18 @@ onMounted(async () => {
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="btn-secondary px-4 py-2 text-sm"
+          <GlassButton
+            variant="secondary"
             @click="showNewOrgModal = false"
           >
             {{ t('common.cancel') }}
-          </button>
-          <button
+          </GlassButton>
+          <GlassButton
             type="submit"
-            :disabled="creatingOrg"
-            class="btn-primary px-5 py-2 text-sm"
+            :loading="creatingOrg"
           >
             {{ creatingOrg ? t('common.creating') : t('team.createOrganization') }}
-          </button>
+          </GlassButton>
         </div>
       </form>
     </Modal>
@@ -289,20 +282,18 @@ onMounted(async () => {
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="btn-secondary px-4 py-2 text-sm"
+          <GlassButton
+            variant="secondary"
             @click="showNewTeamModal = false"
           >
             {{ t('common.cancel') }}
-          </button>
-          <button
+          </GlassButton>
+          <GlassButton
             type="submit"
-            :disabled="creatingTeam"
-            class="btn-primary px-5 py-2 text-sm"
+            :loading="creatingTeam"
           >
             {{ creatingTeam ? t('common.creating') : t('team.createTeam') }}
-          </button>
+          </GlassButton>
         </div>
       </form>
     </Modal>

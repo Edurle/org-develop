@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GlassButton from '@/components/GlassButton.vue'
+
 defineProps<{
   title: string
   description?: string
@@ -28,12 +30,13 @@ defineEmits<{
     </p>
 
     <!-- Action button -->
-    <button
+    <GlassButton
       v-if="actionLabel"
-      class="mt-2 btn-primary px-5 py-2 text-sm"
+      size="large"
+      class="mt-2"
       @click="$emit('action')"
     >
       {{ actionLabel }}
-    </button>
+    </GlassButton>
   </div>
 </template>

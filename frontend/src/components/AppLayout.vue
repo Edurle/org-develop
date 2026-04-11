@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { currentLocale, toggleLocale } from '@/locales'
+import GlassButton from '@/components/GlassButton.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -65,22 +66,16 @@ async function handleLogout() {
 
       <!-- Right: User -->
       <div class="ml-auto flex items-center gap-3">
-        <button
-          class="text-xs text-gray-400 hover:text-gray-600 transition-all px-2.5 py-1 rounded-full bg-white/40 border border-white/30 backdrop-blur-sm hover:bg-white/60"
-          @click="toggleLocale"
-        >
+        <GlassButton variant="ghost" size="small" @click="toggleLocale">
           {{ currentLocale() === 'en' ? '中文' : 'EN' }}
-        </button>
+        </GlassButton>
         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold">
           {{ (authStore.username || 'U').charAt(0).toUpperCase() }}
         </div>
         <span class="text-sm text-gray-600">{{ authStore.username || 'User' }}</span>
-        <button
-          class="text-xs text-gray-400 hover:text-gray-600 transition-all ml-2 bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm hover:bg-white/60"
-          @click="handleLogout"
-        >
+        <GlassButton variant="ghost" size="small" class="ml-2" @click="handleLogout">
           {{ $t('common.logout') }}
-        </button>
+        </GlassButton>
       </div>
     </header>
 

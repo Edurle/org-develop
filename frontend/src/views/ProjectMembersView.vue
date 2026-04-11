@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import { teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { TeamMember } from '@/types'
 
 const { t } = useI18n()
@@ -89,9 +90,9 @@ onMounted(loadMembers)
         <h1 class="text-xl font-bold text-gray-900">{{ t('project.members') }}</h1>
         <p class="mt-1 text-sm text-gray-500">{{ t('project.manageMembers') }}</p>
       </div>
-      <button class="btn-primary px-5 py-2.5 text-sm" @click="openAddModal">
+      <GlassButton size="large" @click="openAddModal">
         {{ t('project.addMember') }}
-      </button>
+      </GlassButton>
     </div>
 
     <!-- Error -->
@@ -180,20 +181,18 @@ onMounted(loadMembers)
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="btn-secondary px-4 py-2 text-sm"
+          <GlassButton
+            variant="secondary"
             @click="showAddModal = false"
           >
             {{ t('common.cancel') }}
-          </button>
-          <button
+          </GlassButton>
+          <GlassButton
             type="submit"
-            :disabled="adding"
-            class="btn-primary px-5 py-2 text-sm"
+            :loading="adding"
           >
             {{ adding ? t('project.adding') : t('project.addMember') }}
-          </button>
+          </GlassButton>
         </div>
       </form>
     </Modal>

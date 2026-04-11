@@ -7,6 +7,7 @@ import { useIterationStore } from '@/stores/iteration'
 import { useRequirementStore } from '@/stores/requirement'
 import StatusBadge from '@/components/StatusBadge.vue'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -156,30 +157,18 @@ onMounted(async () => {
               @keyup.enter="saveName"
               @keyup.escape="editingName = false"
             />
-            <button
-              class="btn-primary !px-2 !py-1 text-xs"
-              :disabled="saving"
-              @click="saveName"
-            >
+            <GlassButton size="small" :disabled="saving" @click="saveName">
               {{ t('common.save') }}
-            </button>
-            <button
-              class="btn-secondary !px-2 !py-1 text-xs"
-              @click="editingName = false"
-            >
+            </GlassButton>
+            <GlassButton variant="secondary" size="small" @click="editingName = false">
               {{ t('common.cancel') }}
-            </button>
+            </GlassButton>
           </div>
-          <button
-            v-if="!editingName"
-            class="btn-secondary !p-1.5 !rounded-full"
-            :title="t('common.edit')"
-            @click="startEditName"
-          >
+          <GlassButton v-if="!editingName" variant="secondary" @click="startEditName" :title="t('common.edit')">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
-          </button>
+          </GlassButton>
         </div>
 
         <div class="mt-2 flex items-center gap-2">
@@ -193,30 +182,18 @@ onMounted(async () => {
               class="input-glass flex-1 resize-none !text-sm"
               @keyup.escape="editingDesc = false"
             />
-            <button
-              class="btn-primary !px-2 !py-1 text-xs"
-              :disabled="saving"
-              @click="saveDesc"
-            >
+            <GlassButton size="small" :disabled="saving" @click="saveDesc">
               {{ t('common.save') }}
-            </button>
-            <button
-              class="btn-secondary !px-2 !py-1 text-xs"
-              @click="editingDesc = false"
-            >
+            </GlassButton>
+            <GlassButton variant="secondary" size="small" @click="editingDesc = false">
               {{ t('common.cancel') }}
-            </button>
+            </GlassButton>
           </div>
-          <button
-            v-if="!editingDesc"
-            class="btn-secondary !p-1.5 !rounded-full"
-            :title="t('common.edit')"
-            @click="startEditDesc"
-          >
+          <GlassButton v-if="!editingDesc" variant="secondary" @click="startEditDesc" :title="t('common.edit')">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
-          </button>
+          </GlassButton>
         </div>
       </div>
 
@@ -240,15 +217,12 @@ onMounted(async () => {
       <div class="glass-card overflow-hidden">
         <div class="px-5 py-4 border-b border-blue-500/8 flex items-center justify-between">
           <h2 class="text-sm font-bold text-gray-900">{{ t('project.activeIterations') }}</h2>
-          <button
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-white/80 border border-blue-500/10 text-gray-700 hover:bg-blue-50/80 hover:border-blue-500/20 transition-all"
-            @click="openCreateIterModal"
-          >
+          <GlassButton size="small" @click="openCreateIterModal">
             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             {{ t('iteration.newIteration') }}
-          </button>
+          </GlassButton>
         </div>
         <div v-if="activeIterations.length === 0" class="px-5 py-8 text-center text-sm text-gray-400">
           {{ t('project.noActiveIterations') }}
@@ -328,8 +302,8 @@ onMounted(async () => {
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showCreateModal = false">{{ t('common.cancel') }}</button>
-        <button class="btn-primary" :disabled="!newIterName.trim()" @click="handleCreateIter">{{ t('iteration.create') }}</button>
+        <GlassButton variant="secondary" @click="showCreateModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton :disabled="!newIterName.trim()" @click="handleCreateIter">{{ t('iteration.create') }}</GlassButton>
       </div>
     </Modal>
   </div>

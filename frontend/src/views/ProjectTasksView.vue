@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import GlassButton from '@/components/GlassButton.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -135,13 +136,13 @@ onMounted(loadData)
               <td class="px-5 py-3">
                 <div class="flex items-center gap-2">
                   <!-- Claim button for open tasks -->
-                  <button
+                  <GlassButton
                     v-if="task.status === 'open'"
-                    class="btn-primary px-3 py-1.5 text-xs"
+                    size="small"
                     @click="handleClaim(task.id)"
                   >
                     {{ t('task.claim') }}
-                  </button>
+                  </GlassButton>
                   <!-- Status dropdown for transitions -->
                   <select
                     id="task-status"

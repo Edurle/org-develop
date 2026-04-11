@@ -6,6 +6,7 @@ import { useSpecificationStore } from '@/stores/specification'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { Severity, ClauseCategory, SpecClause } from '@/types'
 
 const { t } = useI18n()
@@ -238,7 +239,7 @@ onMounted(loadAll)
       <div class="mb-8">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-bold text-gray-900">{{ t('specification.versions') }}</h2>
-          <button class="btn-primary px-4 py-2 text-sm" @click="handleCreateVersion">{{ t('specification.createVersion') }}</button>
+          <GlassButton @click="handleCreateVersion">{{ t('specification.createVersion') }}</GlassButton>
         </div>
         <div v-if="specStore.versions.length === 0" class="text-sm text-gray-500 py-4">{{ t('specification.noVersions') }}</div>
         <div v-else class="space-y-3">
@@ -251,25 +252,25 @@ onMounted(loadAll)
               </div>
               <div class="flex items-center gap-2">
                 <template v-if="ver.status === 'draft'">
-                  <button v-if="editingVersionId !== ver.id" class="btn-ghost px-3 py-1.5 text-xs" @click="startEdit(ver)">{{ t('specification.editContent') }}</button>
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-500/10 border border-amber-500/15 rounded-full backdrop-blur-sm hover:bg-amber-500/20 transition-all cursor-pointer" @click="specStore.submitForReview(ver.id)">{{ t('specification.submitForReview') }}</button>
+                  <GlassButton v-if="editingVersionId !== ver.id" variant="ghost" size="small" @click="startEdit(ver)">{{ t('specification.editContent') }}</GlassButton>
+                  <GlassButton variant="ghost" size="small" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</GlassButton>
+                  <GlassButton variant="warning" size="small" @click="specStore.submitForReview(ver.id)">{{ t('specification.submitForReview') }}</GlassButton>
                 </template>
                 <template v-if="ver.status === 'reviewing'">
-                  <button class="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-500/10 border border-emerald-500/15 rounded-full backdrop-blur-sm hover:bg-emerald-500/20 transition-all cursor-pointer" @click="handleLock(ver.id)">{{ t('specification.lock') }}</button>
-                  <button class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-500/10 border border-red-500/15 rounded-full backdrop-blur-sm hover:bg-red-500/20 transition-all cursor-pointer" @click="handleReject(ver.id)">{{ t('specification.reject') }}</button>
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
+                  <GlassButton variant="success" size="small" @click="handleLock(ver.id)">{{ t('specification.lock') }}</GlassButton>
+                  <GlassButton variant="danger" size="small" @click="handleReject(ver.id)">{{ t('specification.reject') }}</GlassButton>
+                  <GlassButton variant="ghost" size="small" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</GlassButton>
                 </template>
                 <template v-if="ver.status === 'locked' || ver.status === 'rejected'">
-                  <button class="btn-ghost px-3 py-1.5 text-xs" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</button>
+                  <GlassButton variant="ghost" size="small" @click="selectVersionForClauses(ver.id)">{{ t('specification.viewClauses') }}</GlassButton>
                 </template>
               </div>
             </div>
             <div v-if="editingVersionId === ver.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
               <textarea id="spec-content" v-model="editContent" class="input-glass font-mono h-64 resize-y" :placeholder="t('specification.jsonContent')" />
               <div class="flex items-center justify-end gap-2 mt-2">
-                <button class="btn-secondary px-3 py-1.5 text-xs" @click="cancelEdit">{{ t('common.cancel') }}</button>
-                <button class="btn-primary px-3 py-1.5 text-xs" @click="saveContent">{{ t('specification.saveAsNewVersion') }}</button>
+                <GlassButton variant="secondary" size="small" @click="cancelEdit">{{ t('common.cancel') }}</GlassButton>
+                <GlassButton size="small" @click="saveContent">{{ t('specification.saveAsNewVersion') }}</GlassButton>
               </div>
             </div>
           </div>
@@ -280,7 +281,7 @@ onMounted(loadAll)
       <div v-if="specStore.currentVersion">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-bold text-gray-900">{{ t('specification.clauses') + ' (' + t('specification.version', { n: specStore.currentVersion.version }) + ')' }}</h2>
-          <button v-if="specStore.currentVersion.status === 'draft'" class="btn-primary px-4 py-2 text-sm" @click="openAddClauseModal">{{ t('specification.addClause') }}</button>
+          <GlassButton v-if="specStore.currentVersion.status === 'draft'" @click="openAddClauseModal">{{ t('specification.addClause') }}</GlassButton>
         </div>
         <EmptyState v-if="specStore.clauses.length === 0" :title="t('specification.noClauses')" :description="t('specification.noClausesDesc')" :action-label="specStore.currentVersion.status === 'draft' ? t('specification.addClause') : undefined" @action="openAddClauseModal" />
         <div v-else class="glass-card overflow-hidden">
@@ -309,8 +310,8 @@ onMounted(loadAll)
                 <td class="px-5 py-3">
                   <template v-if="specStore.currentVersion?.status === 'draft'">
                     <div class="flex items-center gap-2">
-                      <button class="text-gray-500 hover:text-gray-700 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all" @click="openEditClauseModal(clause)">{{ t('common.edit') }}</button>
-                      <button class="text-red-500 hover:text-red-700 text-xs font-medium bg-red-500/10 border border-red-500/15 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all" @click="openDeleteClauseConfirm(clause)">{{ t('common.delete') }}</button>
+                      <GlassButton variant="ghost" size="small" @click="openEditClauseModal(clause)">{{ t('common.edit') }}</GlassButton>
+                      <GlassButton variant="danger" size="small" @click="openDeleteClauseConfirm(clause)">{{ t('common.delete') }}</GlassButton>
                     </div>
                   </template>
                 </td>
@@ -351,8 +352,8 @@ onMounted(loadAll)
           </div>
         </div>
         <template #footer>
-          <button class="btn-secondary px-4 py-2 text-sm" @click="closeClauseModal">{{ t('common.cancel') }}</button>
-          <button class="btn-primary px-5 py-2 text-sm" :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleSaveClause">{{ isEditingClause ? t('common.save') : t('specification.addClause') }}</button>
+          <GlassButton variant="secondary" @click="closeClauseModal">{{ t('common.cancel') }}</GlassButton>
+          <GlassButton :disabled="!newClauseId.trim() || !newClauseTitle.trim()" @click="handleSaveClause">{{ isEditingClause ? t('common.save') : t('specification.addClause') }}</GlassButton>
         </template>
       </Modal>
 
@@ -362,8 +363,8 @@ onMounted(loadAll)
           {{ t('specification.deleteClauseConfirm', { title: deleteClauseTitle }) }}
         </p>
         <div class="flex justify-end gap-3 mt-6">
-          <button class="btn-secondary" @click="showDeleteClauseConfirm = false">{{ t('common.cancel') }}</button>
-          <button class="btn-danger px-4 py-2 text-sm" @click="handleDeleteClause">{{ t('common.delete') }}</button>
+          <GlassButton variant="secondary" @click="showDeleteClauseConfirm = false">{{ t('common.cancel') }}</GlassButton>
+          <GlassButton variant="danger" @click="handleDeleteClause">{{ t('common.delete') }}</GlassButton>
         </div>
       </Modal>
     </template>

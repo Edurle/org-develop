@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import GlassButton from '@/components/GlassButton.vue'
 
 const { t } = useI18n()
 
@@ -175,22 +176,9 @@ async function handleRegister() {
           <p v-if="passwordMismatch" class="mt-1 text-xs text-red-300">{{ t('auth.passwordMismatch') }}</p>
         </div>
 
-        <button
-          type="submit"
-          :disabled="loading || passwordMismatch"
-          class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-br from-blue-600 to-blue-700 rounded-full shadow-[0_2px_12px_rgba(37,99,235,0.4)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.5)] hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 mt-2"
-        >
-          <svg
-            v-if="loading"
-            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+        <GlassButton variant="auth" :loading="loading" class="w-full mt-2" type="submit" :disabled="loading || passwordMismatch">
           {{ loading ? t('auth.creatingAccount') : t('auth.createAccount') }}
-        </button>
+        </GlassButton>
       </form>
 
       <!-- Link to login -->

@@ -7,6 +7,7 @@ import { useIterationStore } from '@/stores/iteration'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { Priority, Requirement } from '@/types'
 
 const route = useRoute()
@@ -158,12 +159,9 @@ onMounted(loadData)
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">{{ t('requirement.title') }}</h1>
-      <button
-        class="btn-primary px-5 py-2.5 text-sm"
-        @click="openCreateModal"
-      >
+      <GlassButton size="large" @click="openCreateModal">
         {{ t('requirement.newRequirement') }}
-      </button>
+      </GlassButton>
     </div>
 
     <!-- Error -->
@@ -200,12 +198,9 @@ onMounted(loadData)
         <option v-for="p in priorityOptions" :key="p" :value="p">{{ t('priority.' + p) }}</option>
       </select>
 
-      <button
-        class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-        @click="statusFilter = ''; iterationFilter = ''; priorityFilter = ''; applyFilters()"
-      >
+      <GlassButton variant="ghost" size="small" @click="statusFilter = ''; iterationFilter = ''; priorityFilter = ''; applyFilters()">
         {{ t('common.clearFilters') }}
-      </button>
+      </GlassButton>
     </div>
 
     <!-- Loading -->
@@ -261,25 +256,28 @@ onMounted(loadData)
             <td class="px-4 py-3 text-gray-500">{{ formatDate(req.created_at) }}</td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
-                <button
-                  class="text-blue-600 hover:text-blue-800 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
+                <GlassButton
+                  variant="ghost"
+                  size="small"
                   @click.stop="navigateToReq(req.id)"
                 >
                   {{ t('common.view') }}
-                </button>
-                <button
-                  class="text-gray-500 hover:text-gray-700 text-xs font-medium bg-white/40 border border-white/30 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
+                </GlassButton>
+                <GlassButton
+                  variant="ghost"
+                  size="small"
                   @click.stop="openEditModal(req)"
                 >
                   {{ t('common.edit') }}
-                </button>
-                <button
+                </GlassButton>
+                <GlassButton
                   v-if="req.status === 'draft' || req.status === 'cancelled'"
-                  class="text-red-500 hover:text-red-700 text-xs font-medium bg-red-500/10 border border-red-500/15 rounded-full px-2.5 py-0.5 backdrop-blur-sm transition-all"
+                  variant="danger"
+                  size="small"
                   @click.stop="openDeleteConfirm(req)"
                 >
                   {{ t('common.delete') }}
-                </button>
+                </GlassButton>
               </div>
             </td>
           </tr>
@@ -326,19 +324,12 @@ onMounted(loadData)
       </div>
 
       <div class="flex justify-end gap-3 mt-6">
-        <button
-          class="btn-secondary"
-          @click="showCreateModal = false"
-        >
+        <GlassButton variant="secondary" @click="showCreateModal = false">
           {{ t('common.cancel') }}
-        </button>
-        <button
-          class="btn-primary"
-          :disabled="!newTitle.trim() || !newIterationId"
-          @click="handleCreate"
-        >
+        </GlassButton>
+        <GlassButton :disabled="!newTitle.trim() || !newIterationId" @click="handleCreate">
           {{ t('common.create') }}
-        </button>
+        </GlassButton>
       </div>
     </Modal>
 
@@ -363,8 +354,8 @@ onMounted(loadData)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditModal = false">{{ t('common.cancel') }}</button>
-        <button class="btn-primary" :disabled="!editTitle.trim()" @click="handleEdit">{{ t('common.save') }}</button>
+        <GlassButton variant="secondary" @click="showEditModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton :disabled="!editTitle.trim()" @click="handleEdit">{{ t('common.save') }}</GlassButton>
       </div>
     </Modal>
 
@@ -374,8 +365,8 @@ onMounted(loadData)
         {{ t('requirement.deleteConfirmText', { title: deleteTargetTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteConfirm = false">{{ t('common.cancel') }}</button>
-        <button class="btn-danger px-4 py-2 text-sm" @click="handleDelete">{{ t('common.delete') }}</button>
+        <GlassButton variant="secondary" @click="showDeleteConfirm = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton variant="danger" @click="handleDelete">{{ t('common.delete') }}</GlassButton>
       </div>
     </Modal>
   </div>

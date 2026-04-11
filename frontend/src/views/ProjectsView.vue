@@ -6,6 +6,7 @@ import { useProjectStore } from '@/stores/project'
 import { teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { Team } from '@/types'
 
 const router = useRouter()
@@ -96,9 +97,9 @@ onMounted(async () => {
         <h1 class="text-xl font-bold text-gray-900">{{ t('project.title') }}</h1>
         <p class="mt-1 text-sm text-gray-500">{{ t('project.subtitle') }}</p>
       </div>
-      <button class="btn-primary px-5 py-2.5 text-sm" @click="openNewModal">
+      <GlassButton size="large" @click="openNewModal">
         + {{ t('project.newProject') }}
-      </button>
+      </GlassButton>
     </div>
 
     <!-- Loading skeleton -->
@@ -174,10 +175,10 @@ onMounted(async () => {
           </select>
         </div>
         <div class="flex justify-end gap-3 pt-2">
-          <button type="button" class="btn-secondary px-4 py-2 text-sm" @click="showNewModal = false">{{ t('common.cancel') }}</button>
-          <button type="submit" :disabled="creating" class="btn-primary px-5 py-2 text-sm">
+          <GlassButton variant="secondary" @click="showNewModal = false">{{ t('common.cancel') }}</GlassButton>
+          <GlassButton type="submit" :loading="creating">
             {{ creating ? t('common.creating') : t('project.createProject') }}
-          </button>
+          </GlassButton>
         </div>
       </form>
     </Modal>

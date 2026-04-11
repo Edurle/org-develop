@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useProjectStore } from '@/stores/project'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -165,13 +166,12 @@ onMounted(async () => {
           </div>
 
           <div class="flex justify-end">
-            <button
+            <GlassButton
               type="submit"
-              :disabled="saving"
-              class="btn-primary px-5 py-2 text-sm"
+              :loading="saving"
             >
               {{ saving ? t('common.saving') : t('project.settingsUpdate') }}
-            </button>
+            </GlassButton>
           </div>
         </form>
       </div>
@@ -188,12 +188,9 @@ onMounted(async () => {
             <p class="text-sm font-medium text-gray-900">{{ t('project.deleteProject') }}</p>
             <p class="text-xs text-gray-500">{{ t('project.deleteOnceDeleted') }}</p>
           </div>
-          <button
-            class="btn-danger px-4 py-2 text-sm"
-            @click="openDeleteModal"
-          >
+          <GlassButton variant="danger" @click="openDeleteModal">
             {{ t('project.deleteProjectBtn') }}
-          </button>
+          </GlassButton>
         </div>
       </div>
     </template>
@@ -223,21 +220,19 @@ onMounted(async () => {
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            class="btn-secondary px-4 py-2 text-sm"
+          <GlassButton
+            variant="secondary"
             @click="showDeleteModal = false"
           >
             {{ t('common.cancel') }}
-          </button>
-          <button
-            type="button"
+          </GlassButton>
+          <GlassButton
+            variant="danger"
             :disabled="deleting || deleteConfirm !== project?.name"
-            class="btn-danger px-4 py-2 text-sm"
             @click="handleDelete"
           >
             {{ deleting ? t('common.deleting') : t('project.deleteProjectBtn') }}
-          </button>
+          </GlassButton>
         </div>
       </div>
     </Modal>
