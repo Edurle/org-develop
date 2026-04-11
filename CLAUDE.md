@@ -141,6 +141,37 @@ draft → spec_writing → spec_review → spec_locked → in_progress → testi
 3. 即使是微小的样式修改或文本调整，也应提交
 4. 唯一例外：用户明确要求"不要提交"或"稍后提交"时，跳过此步骤
 
+## FastAPI 依赖注入注意事项
+
+使用 `Annotated` + `Depends` 声明依赖时，**不要同时在默认值中再写 `Depends(...)`**，FastAPI 会抛出 `AssertionError`。
+
+```python
+# ❌ 错误 — Annotated 和默认值中都有 Depends
+db: Annotated[AsyncSession, Depends(get_db)] = Depends(get_db),
+
+# ✅ 正确 — 只在 Annotated 中声明
+db: Annotated[AsyncSession, Depends(get_db)],
+```
+
+**参数顺序：** `Annotated[..., Depends(...)]` 参数（无默认值）必须放在有默认值的参数（如 `search: str | None = None`）**之前**，否则 Python 会报 `SyntaxError`。
+
+```python
+# ❌ 错误 — 无默认值参数在有默认值参数之后
+async def list_users(
+    search: str | None = None,          # 有默认值
+    db: Annotated[AsyncSession, Depends(get_db)],  # 无默认值 → SyntaxError
+):
+
+# ✅ 正确 — Depends 参数在前，可选查询参数在后
+async def list_users(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+    search: str | None = None,
+):
+```
+
+项目中的统一写法是使用 `Annotated`，不加默认值。参见 `backend/app/routers/` 下所有路由文件。
+
 ## vue-i18n 注意事项
 
 在 `frontend/src/locales/*.json` 中编写翻译文本时，**所有 `{` 和 `}` 必须转义**：
