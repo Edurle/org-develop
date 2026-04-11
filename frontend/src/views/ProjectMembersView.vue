@@ -23,7 +23,7 @@ const searchQuery = ref('')
 const searchResults = ref<User[]>([])
 const searching = ref(false)
 const selectedUser = ref<User | null>(null)
-const addForm = ref({ roles: 'member' })
+const addForm = ref({ roles: 'developer' })
 const adding = ref(false)
 const addError = ref('')
 
@@ -90,7 +90,7 @@ function openAddModal() {
   selectedUser.value = null
   searchQuery.value = ''
   searchResults.value = []
-  addForm.value = { roles: 'member' }
+  addForm.value = { roles: 'developer' }
   addError.value = ''
   showAddModal.value = true
 }
@@ -321,10 +321,12 @@ onMounted(loadMembers)
         <div>
           <label for="add-member-role" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.role') }}</label>
           <select id="add-member-role" v-model="addForm.roles" class="select-glass">
-            <option value="admin">{{ t('project.admin') }}</option>
-            <option value="member">{{ t('project.memberRole') }}</option>
-            <option value="viewer">{{ t('project.viewer') }}</option>
-            <option value="developer">{{ t('project.developer') }}</option>
+            <option value="team_admin">{{ t('team.teamAdmin') }}</option>
+            <option value="product_owner">{{ t('team.productOwner') }}</option>
+            <option value="designer">{{ t('team.designer') }}</option>
+            <option value="developer">{{ t('team.developer') }}</option>
+            <option value="tester">{{ t('team.tester') }}</option>
+            <option value="viewer">{{ t('team.viewer') }}</option>
           </select>
         </div>
 
@@ -381,10 +383,12 @@ onMounted(loadMembers)
         <div>
           <label for="edit-role" class="block text-xs font-semibold text-gray-600 mb-1.5">{{ t('project.role') }}</label>
           <select id="edit-role" v-model="editRole" class="select-glass">
-            <option value="admin">{{ t('project.admin') }}</option>
-            <option value="member">{{ t('project.memberRole') }}</option>
-            <option value="viewer">{{ t('project.viewer') }}</option>
-            <option value="developer">{{ t('project.developer') }}</option>
+            <option value="team_admin">{{ t('team.teamAdmin') }}</option>
+            <option value="product_owner">{{ t('team.productOwner') }}</option>
+            <option value="designer">{{ t('team.designer') }}</option>
+            <option value="developer">{{ t('team.developer') }}</option>
+            <option value="tester">{{ t('team.tester') }}</option>
+            <option value="viewer">{{ t('team.viewer') }}</option>
           </select>
         </div>
 
