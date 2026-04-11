@@ -11,6 +11,7 @@ import { useIterationStore } from '@/stores/iteration'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
+import GlassButton from '@/components/GlassButton.vue'
 import type { SpecType, Priority, DevTask, TestCase } from '@/types'
 
 const route = useRoute()
@@ -479,19 +480,14 @@ onMounted(loadAll)
 
         <!-- Status transition buttons -->
         <div v-if="statusActions.length > 0" class="flex items-center gap-2 mt-3">
-          <button
+          <GlassButton
             v-for="action in statusActions"
             :key="action.status"
-            class="px-4 py-2 text-sm font-medium transition-all duration-150"
-            :class="action.status === 'spec_rejected'
-              ? 'btn-danger'
-              : action.status === 'done'
-                ? 'bg-green-500/15 backdrop-blur-sm text-green-600 border border-green-500/20 rounded-full font-semibold hover:bg-green-500/25 hover:border-green-500/40 hover:-translate-y-px cursor-pointer'
-                : 'btn-primary'"
+            :variant="action.status === 'spec_rejected' ? 'danger' : action.status === 'done' ? 'success' : 'primary'"
             @click="handleStatusTransition(action.status)"
           >
             {{ action.label }}
-          </button>
+          </GlassButton>
         </div>
       </div>
 
@@ -518,12 +514,11 @@ onMounted(loadAll)
       <div v-if="activeTab === 'specs'">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.specifications') }}</h2>
-          <button
-            class="btn-primary"
+          <GlassButton
             @click="openCreateSpecModal"
           >
             {{ t('specification.createSpec') }}
-          </button>
+          </GlassButton>
         </div>
 
         <EmptyState
@@ -552,12 +547,9 @@ onMounted(loadAll)
                 <span class="text-xs text-gray-500">v{{ spec.current_version }}</span>
               </div>
               <div class="flex items-center gap-2">
-                <button
-                  class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
-                  @click.stop="navigateToSpec(spec.id)"
-                >
+                <GlassButton variant="ghost" size="small" @click.stop="navigateToSpec(spec.id)">
                   {{ t('common.view') }}
-                </button>
+                </GlassButton>
                 <svg
                   :class="['w-4 h-4 text-gray-400 transition-transform', expandedSpecId === spec.id ? 'rotate-180' : '']"
                   fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
@@ -594,13 +586,12 @@ onMounted(loadAll)
       <div v-if="activeTab === 'dev'">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.devTasks') }}</h2>
-          <button
-            class="btn-primary"
+          <GlassButton
             :disabled="!canCreateDevTask"
             @click="openCreateDevTaskModal"
           >
             {{ t('task.createDevTask') }}
-          </button>
+          </GlassButton>
         </div>
 
         <EmptyState
@@ -636,19 +627,17 @@ onMounted(loadAll)
                 <td class="px-4 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
-                    <button
-                      class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
-                      @click="openEditDevTaskModal(task)"
-                    >
+                    <GlassButton variant="ghost" size="small" @click="openEditDevTaskModal(task)">
                       {{ t('common.edit') }}
-                    </button>
-                    <button
+                    </GlassButton>
+                    <GlassButton
                       v-if="task.status === 'open'"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium bg-red-500/10 border border-red-500/15 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
+                      variant="danger"
+                      size="small"
                       @click="openDeleteDevTaskConfirm(task)"
                     >
                       {{ t('common.delete') }}
-                    </button>
+                    </GlassButton>
                   </div>
                 </td>
               </tr>
@@ -661,12 +650,9 @@ onMounted(loadAll)
       <div v-if="activeTab === 'test'">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.testTasks') }}</h2>
-          <button
-            class="btn-primary"
-            @click="openCreateTestTaskModal"
-          >
+          <GlassButton @click="openCreateTestTaskModal">
             {{ t('task.createTestTask') }}
-          </button>
+          </GlassButton>
         </div>
 
         <EmptyState
@@ -715,19 +701,17 @@ onMounted(loadAll)
                     <StatusBadge :status="tc.status" size="sm" />
                   </div>
                   <div class="flex items-center gap-2">
-                    <button
-                      class="text-sm text-blue-600 hover:text-blue-800 font-medium bg-white/40 border border-white/30 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
-                      @click.stop="openEditTcModal(tc)"
-                    >
+                    <GlassButton variant="ghost" size="small" @click.stop="openEditTcModal(tc)">
                       {{ t('common.edit') }}
-                    </button>
-                    <button
+                    </GlassButton>
+                    <GlassButton
                       v-if="tc.status === 'pending'"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium bg-red-500/10 border border-red-500/15 rounded-full px-3 py-1 backdrop-blur-sm transition-all"
+                      variant="danger"
+                      size="small"
                       @click.stop="openDeleteTcConfirm(tc)"
                     >
                       {{ t('common.delete') }}
-                    </button>
+                    </GlassButton>
                   </div>
                 </div>
               </div>
@@ -906,19 +890,15 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button
-          class="btn-secondary"
-          @click="showCreateSpecModal = false"
-        >
+        <GlassButton variant="secondary" @click="showCreateSpecModal = false">
           {{ t('common.cancel') }}
-        </button>
-        <button
-          class="btn-primary"
+        </GlassButton>
+        <GlassButton
           :disabled="!newSpecTitle.trim()"
           @click="handleCreateSpec"
         >
           {{ t('common.create') }}
-        </button>
+        </GlassButton>
       </div>
     </Modal>
 
@@ -956,19 +936,15 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button
-          class="btn-secondary"
-          @click="showCreateDevTaskModal = false"
-        >
+        <GlassButton variant="secondary" @click="showCreateDevTaskModal = false">
           {{ t('common.cancel') }}
-        </button>
-        <button
-          class="btn-primary"
+        </GlassButton>
+        <GlassButton
           :disabled="!newDevTaskTitle.trim() || !newDevTaskSpecVersionId"
           @click="handleCreateDevTask"
         >
           {{ t('common.create') }}
-        </button>
+        </GlassButton>
       </div>
     </Modal>
 
@@ -987,19 +963,15 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button
-          class="btn-secondary"
-          @click="showCreateTestTaskModal = false"
-        >
+        <GlassButton variant="secondary" @click="showCreateTestTaskModal = false">
           {{ t('common.cancel') }}
-        </button>
-        <button
-          class="btn-primary"
+        </GlassButton>
+        <GlassButton
           :disabled="!newTestTaskTitle.trim()"
           @click="handleCreateTestTask"
         >
           {{ t('common.create') }}
-        </button>
+        </GlassButton>
       </div>
     </Modal>
 
@@ -1026,8 +998,8 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditReqModal = false">{{ t('common.cancel') }}</button>
-        <button class="btn-primary" :disabled="!editReqTitle.trim()" @click="handleEditReq">{{ t('common.save') }}</button>
+        <GlassButton variant="secondary" @click="showEditReqModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton :disabled="!editReqTitle.trim()" @click="handleEditReq">{{ t('common.save') }}</GlassButton>
       </div>
     </Modal>
 
@@ -1055,8 +1027,8 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditDevTaskModal = false">{{ t('common.cancel') }}</button>
-        <button class="btn-primary" :disabled="!editDevTaskTitle.trim()" @click="handleEditDevTask">{{ t('common.save') }}</button>
+        <GlassButton variant="secondary" @click="showEditDevTaskModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton :disabled="!editDevTaskTitle.trim()" @click="handleEditDevTask">{{ t('common.save') }}</GlassButton>
       </div>
     </Modal>
 
@@ -1066,8 +1038,8 @@ onMounted(loadAll)
         {{ t('task.deleteDevTaskConfirm', { title: deleteDevTaskTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteDevTaskConfirm = false">{{ t('common.cancel') }}</button>
-        <button class="btn-danger" @click="handleDeleteDevTask">{{ t('common.delete') }}</button>
+        <GlassButton variant="secondary" @click="showDeleteDevTaskConfirm = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton variant="danger" @click="handleDeleteDevTask">{{ t('common.delete') }}</GlassButton>
       </div>
     </Modal>
 
@@ -1121,8 +1093,8 @@ onMounted(loadAll)
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showEditTcModal = false">{{ t('common.cancel') }}</button>
-        <button class="btn-primary" :disabled="!editTcTitle.trim()" @click="handleEditTc">{{ t('common.save') }}</button>
+        <GlassButton variant="secondary" @click="showEditTcModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton :disabled="!editTcTitle.trim()" @click="handleEditTc">{{ t('common.save') }}</GlassButton>
       </div>
     </Modal>
 
@@ -1132,8 +1104,8 @@ onMounted(loadAll)
         {{ t('testcase.deleteTestCaseConfirm', { title: deleteTcTitle }) }}
       </p>
       <div class="flex justify-end gap-3 mt-6">
-        <button class="btn-secondary" @click="showDeleteTcConfirm = false">{{ t('common.cancel') }}</button>
-        <button class="btn-danger" @click="handleDeleteTc">{{ t('common.delete') }}</button>
+        <GlassButton variant="secondary" @click="showDeleteTcConfirm = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton variant="danger" @click="handleDeleteTc">{{ t('common.delete') }}</GlassButton>
       </div>
     </Modal>
   </div>
