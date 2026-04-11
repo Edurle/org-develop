@@ -105,6 +105,16 @@ draft → spec_writing → spec_review → spec_locked → in_progress → testi
 
 前端：Vite 开发服务器端口 3000，代理 `/api` 到 `http://localhost:8000`（参见 `frontend/vite.config.ts`）。
 
+## 任务完成后的自动提交规则
+
+**每次完成一个开发任务（修复 bug、添加功能、重构、样式调整等）后，必须使用 `/commit` 命令（subagent）提交并同步代码。**
+
+具体要求：
+1. 完成任务代码修改后，不要等待用户指示，立即执行 `/commit` 命令
+2. 该命令会使用 glm-4.7 模型的 subagent 自动检查变更、生成提交信息、提交并推送到远程
+3. 即使是微小的样式修改或文本调整，也应提交
+4. 唯一例外：用户明确要求"不要提交"或"稍后提交"时，跳过此步骤
+
 ## 设计文档
 
 - `docs/superpowers/specs/2026-03-29-dev-platform-design.md` — 完整系统设计规格（中文）

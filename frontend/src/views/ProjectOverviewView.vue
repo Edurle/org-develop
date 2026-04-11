@@ -172,7 +172,7 @@ onMounted(async () => {
           </div>
           <button
             v-if="!editingName"
-            class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            class="btn-secondary !p-1.5 !rounded-full"
             :title="t('common.edit')"
             @click="startEditName"
           >
@@ -209,7 +209,7 @@ onMounted(async () => {
           </div>
           <button
             v-if="!editingDesc"
-            class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            class="btn-secondary !p-1.5 !rounded-full"
             :title="t('common.edit')"
             @click="startEditDesc"
           >
