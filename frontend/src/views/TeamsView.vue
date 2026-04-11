@@ -5,6 +5,7 @@ import { orgApi, teamApi } from '@/api/endpoints'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import GlassButton from '@/components/GlassButton.vue'
+import TeamMemberPanel from '@/components/TeamMemberPanel.vue'
 import type { Organization, Team } from '@/types'
 
 const { t } = useI18n()
@@ -24,6 +25,16 @@ const showNewTeamModal = ref(false)
 const teamForm = ref({ org_id: '', name: '', slug: '' })
 const creatingTeam = ref(false)
 const teamError = ref('')
+
+const expandedTeams = ref<Set<string>>(new Set())
+
+function toggleMembers(teamId: string) {
+  if (expandedTeams.value.has(teamId)) {
+    expandedTeams.value.delete(teamId)
+  } else {
+    expandedTeams.value.add(teamId)
+  }
+}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString()
@@ -164,13 +175,27 @@ onMounted(async () => {
           <div
             v-for="team in teamsForOrg(org.id)"
             :key="team.id"
-            class="px-5 py-3 flex items-center justify-between hover:bg-blue-500/[0.01] transition-colors"
           >
-            <div>
-              <span class="text-sm font-medium text-gray-800">{{ team.name }}</span>
-              <span class="text-xs text-gray-400 ml-2">{{ team.slug }}</span>
+            <div class="px-5 py-3 flex items-center justify-between hover:bg-blue-500/[0.01] transition-colors">
+              <div>
+                <span class="text-sm font-medium text-gray-800">{{ team.name }}</span>
+                <span class="text-xs text-gray-400 ml-2">{{ team.slug }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  data-testid="member-toggle"
+                  class="text-xs text-blue-500 hover:text-blue-700 transition-colors cursor-pointer"
+                  @click="toggleMembers(team.id)"
+                >
+                  {{ expandedTeams.has(team.id) ? t('common.close') : t('team.members', { count: '' }) }}
+                </button>
+                <span class="text-xs text-gray-400">{{ formatDate(team.created_at) }}</span>
+              </div>
             </div>
-            <span class="text-xs text-gray-400">{{ formatDate(team.created_at) }}</span>
+            <TeamMemberPanel
+              v-if="expandedTeams.has(team.id)"
+              :team-id="team.id"
+            />
           </div>
           <div
             v-if="teamsForOrg(org.id).length === 0"
