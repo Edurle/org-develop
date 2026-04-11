@@ -77,9 +77,17 @@ class TestRequirementStatusTransitions:
     async def test_full_forward_flow(self, db, req_with_seed):
         req = req_with_seed["requirement"]
         uid = req_with_seed["user"].id
-        for status in ["spec_writing", "spec_review", "spec_locked", "in_progress", "testing"]:
-            req = await update_requirement_status(db, req.id, status, uid)
-            assert req.status == status
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "Test Spec")
+        ver = await create_spec_version(db, spec.id, {})
+        await submit_spec_for_review(db, ver.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
+        await lock_spec(db, ver.id, uid)
+        result = await db.execute(select(Requirement).where(Requirement.id == req.id))
+        assert result.scalars().first().status == "spec_locked"
+        await update_requirement_status(db, req.id, "in_progress", uid)
+        req_updated = await update_requirement_status(db, req.id, "testing", uid)
+        assert req_updated.status == "testing"
 
 
 # ────────────────────────────────────────────────────────────
@@ -94,8 +102,8 @@ class TestSpecVersionImmutability:
         spec = await create_specification(db, req.id, "api", "Login API Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
         await create_clause(db, version.id, "API-001", "Create endpoint", "POST /login", "functional", "must")
-        await update_requirement_status(db, req.id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
         await lock_spec(db, version.id, uid)
         return spec, version
 
@@ -136,8 +144,8 @@ class TestCoverageEnforcement:
                 c["description"], c["category"], c["severity"],
             )
             clause_objs.append(cl)
-        await update_requirement_status(db, req.id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
         await lock_spec(db, version.id, uid)
         return spec, version, clause_objs
 
@@ -281,9 +289,10 @@ class TestEndToEndFlow:
         await create_clause(db, ui_ver.id, "UI-001", "Login button", "Exists", "ui_element", "must")
 
         # Step 5: Review and lock all
-        await update_requirement_status(db, req.id, "spec_review", uid)
         for ver in [api_ver, data_ver, flow_ver, ui_ver]:
             await submit_spec_for_review(db, ver.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
+        for ver in [api_ver, data_ver, flow_ver, ui_ver]:
             await lock_spec(db, ver.id, uid)
 
         # Step 6: Auto-transitioned to spec_locked
@@ -332,8 +341,8 @@ class TestDevTaskGate:
         await update_requirement_status(db, req.id, "spec_writing", uid)
         spec = await create_specification(db, req.id, "api", "Spec")
         version = await create_spec_version(db, spec.id, {})
-        await update_requirement_status(db, req.id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
         # version is reviewing, not locked
 
         with pytest.raises(ValueError, match="Cannot create dev task"):
@@ -347,8 +356,8 @@ class TestDevTaskGate:
         await update_requirement_status(db, req.id, "spec_writing", uid)
         spec = await create_specification(db, req.id, "api", "Spec")
         version = await create_spec_version(db, spec.id, {})
-        await update_requirement_status(db, req.id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
         await lock_spec(db, version.id, uid)
 
         task = await create_dev_task(db, req.id, version.id, iter_id, "Implement")
@@ -393,3 +402,89 @@ class TestTestCaseClauseLink:
                 db, test_task.id, "TC1", None, "Steps", "Expected",
                 clause_ids=["nonexistent-id"],
             )
+
+
+# ────────────────────────────────────────────────────────────
+# 7. Spec Status Gate Validation
+# ────────────────────────────────────────────────────────────
+
+class TestSpecStatusGates:
+    """Tests for spec-level validation on requirement status transitions."""
+
+    async def test_submit_for_review_rejects_no_specs(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        with pytest.raises(ValueError, match="at least one specification must exist"):
+            await update_requirement_status(db, req.id, "spec_review", uid)
+
+    async def test_submit_for_review_rejects_specs_still_in_draft(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "Login API")
+        await create_spec_version(db, spec.id, {"endpoints": []})
+        with pytest.raises(ValueError, match="submitted for review or locked"):
+            await update_requirement_status(db, req.id, "spec_review", uid)
+
+    async def test_submit_for_review_allows_all_reviewing(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "Login API")
+        ver = await create_spec_version(db, spec.id, {"endpoints": []})
+        await submit_spec_for_review(db, ver.id)
+        result = await update_requirement_status(db, req.id, "spec_review", uid)
+        assert result.status == "spec_review"
+
+    async def test_submit_for_review_allows_mix_reviewing_and_locked(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec_a = await create_specification(db, req.id, "api", "API Spec")
+        spec_b = await create_specification(db, req.id, "data", "Data Spec")
+        ver_a = await create_spec_version(db, spec_a.id, {})
+        ver_b = await create_spec_version(db, spec_b.id, {})
+        await submit_spec_for_review(db, ver_a.id)
+        await lock_spec(db, ver_a.id, uid)
+        await submit_spec_for_review(db, ver_b.id)
+        result = await update_requirement_status(db, req.id, "spec_review", uid)
+        assert result.status == "spec_review"
+
+    async def test_lock_rejects_when_not_all_locked(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "API Spec")
+        ver = await create_spec_version(db, spec.id, {})
+        await submit_spec_for_review(db, ver.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
+        with pytest.raises(ValueError, match="all specifications must have a locked version"):
+            await update_requirement_status(db, req.id, "spec_locked", uid)
+
+    async def test_lock_succeeds_when_all_locked(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "API Spec")
+        ver = await create_spec_version(db, spec.id, {})
+        await submit_spec_for_review(db, ver.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
+        await lock_spec(db, ver.id, uid)
+        result = await db.execute(select(Requirement).where(Requirement.id == req.id))
+        fresh_req = result.scalars().first()
+        assert fresh_req.status == "spec_locked"
+
+    async def test_start_dev_requires_at_least_one_locked_version(self, db, req_with_seed):
+        req = req_with_seed["requirement"]
+        uid = req_with_seed["user"].id
+        await update_requirement_status(db, req.id, "spec_writing", uid)
+        spec = await create_specification(db, req.id, "api", "API Spec")
+        ver = await create_spec_version(db, spec.id, {})
+        await submit_spec_for_review(db, ver.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
+        await lock_spec(db, ver.id, uid)
+        result = await db.execute(select(Requirement).where(Requirement.id == req.id))
+        assert result.scalars().first().status == "spec_locked"
+        updated = await update_requirement_status(db, req.id, "in_progress", uid)
+        assert updated.status == "in_progress"

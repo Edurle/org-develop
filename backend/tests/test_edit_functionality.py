@@ -70,8 +70,8 @@ async def _setup_locked_spec(db, req_with_seed):
     await update_requirement_status(db, req_id, "spec_writing", uid)
     spec = await create_specification(db, req_id, "api", "Login API Spec")
     version = await create_spec_version(db, spec.id, {"endpoints": []})
-    await update_requirement_status(db, req_id, "spec_review", uid)
     await submit_spec_for_review(db, version.id)
+    await update_requirement_status(db, req_id, "spec_review", uid)
     await lock_spec(db, version.id, uid)
     return version
 
@@ -174,8 +174,8 @@ class TestRequirementEdit:
         await update_requirement_status(db, req.id, "spec_writing", uid)
         spec = await create_specification(db, req.id, "api", "Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
-        await update_requirement_status(db, req.id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req.id, "spec_review", uid)
         await lock_spec(db, version.id, uid)  # auto-transitions req to spec_locked
         # Now cancel
         await update_requirement_status(db, req.id, "cancelled", uid)
@@ -226,10 +226,10 @@ class TestClauseEdit:
         version, clause = await _setup_clause_on_draft_version(db, req_with_seed)
         uid = req_with_seed["user"].id
         # Lock the version
+        await submit_spec_for_review(db, version.id)
         await update_requirement_status(
             db, req_with_seed["requirement"].id, "spec_review", uid,
         )
-        await submit_spec_for_review(db, version.id)
         await lock_spec(db, version.id, uid)
         with pytest.raises(ValueError, match="non-draft"):
             await update_clause(db, clause.id, title="Should Fail")
@@ -247,10 +247,10 @@ class TestClauseEdit:
         version, clause = await _setup_clause_on_draft_version(db, req_with_seed)
         uid = req_with_seed["user"].id
         # Lock the version
+        await submit_spec_for_review(db, version.id)
         await update_requirement_status(
             db, req_with_seed["requirement"].id, "spec_review", uid,
         )
-        await submit_spec_for_review(db, version.id)
         await lock_spec(db, version.id, uid)
         with pytest.raises(ValueError, match="non-draft"):
             await delete_clause(db, clause.id)

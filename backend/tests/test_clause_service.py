@@ -81,8 +81,8 @@ class TestClauseService:
         await update_requirement_status(db, req_id, "spec_writing", uid)
         spec = await create_specification(db, req_id, "api", "Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
-        await update_requirement_status(db, req_id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req_id, "spec_review", uid)
         await lock_spec(db, version.id, uid)
         with pytest.raises(ValueError, match="Cannot add clauses to a locked"):
             await create_clause(

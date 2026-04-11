@@ -46,8 +46,8 @@ class TestDevTaskService:
         await update_requirement_status(db, req_id, "spec_writing", uid)
         spec = await create_specification(db, req_id, "api", "Login API Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
-        await update_requirement_status(db, req_id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req_id, "spec_review", uid)
         await lock_spec(db, version.id, uid)
         return version
 
@@ -68,8 +68,8 @@ class TestDevTaskService:
         await update_requirement_status(db, req_id, "spec_writing", uid)
         spec = await create_specification(db, req_id, "api", "Login API Spec")
         version = await create_spec_version(db, spec.id, {"endpoints": []})
-        await update_requirement_status(db, req_id, "spec_review", uid)
         await submit_spec_for_review(db, version.id)
+        await update_requirement_status(db, req_id, "spec_review", uid)
         # Version is reviewing, not locked
         with pytest.raises(ValueError, match="Cannot create dev task"):
             await create_dev_task(
