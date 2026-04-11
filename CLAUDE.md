@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-本文件为 Claude Code (claude.ai/code) 在本仓库中工作时提供指导。
+本文件为 AI 编码助手（OpenCode / Claude Code 等）在本仓库中工作时提供指导。
 
 ## 项目概述
 
@@ -8,29 +8,44 @@
 
 ## 开发命令
 
+### 快速启动（两个服务同时）
+```bash
+./start.sh          # 启动后端(:8000) + 前端(:3000)，PID 写入 .pids/
+./stop.sh           # 停止所有服务（按 PID 或端口 fallback）
+```
+
 ### 后端 (Python 3.11+, FastAPI)
 ```bash
-cd backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000   # 开发服务器
-pytest -v                                                     # 运行全部测试（配置在 pyproject.toml，asyncio_mode = "auto"）
-pytest tests/test_requirement_service.py -v                   # 运行单个测试文件
-pytest tests/test_requirement_service.py::test_create_requirement -v  # 运行单个测试
-alembic revision --autogenerate -m "description"              # 生成新迁移（尚未创建过迁移）
-alembic upgrade head                                           # 执行迁移
+# 开发服务器 — 在 backend/ 下运行
+cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 测试 — 在 backend/ 下运行，pytest-asyncio asyncio_mode = "auto"
+cd backend && pytest -v                                                       # 全部
+cd backend && pytest tests/test_specification_service.py -v                   # 单文件
+cd backend && pytest tests/test_specification_service.py::test_create_spec -v # 单测试
+
+# 数据库迁移 — ⚠️ 必须在仓库根目录运行（alembic.ini 在 backend/ 但 script_location = backend/alembic）
+alembic revision --autogenerate -m "description"   # 生成迁移（尚未创建过迁移）
+alembic upgrade head                                # 执行迁移
 ```
 
 ### 前端 (Vue 3 + TypeScript)
 ```bash
 cd frontend
-npm run dev      # Vite 开发服务器，端口 3000，代理 /api 到 localhost:8000
-npm run build    # 生产构建
+npm run dev      # Vite 开发服务器，端口 3000，代理 /api → localhost:8000
+npm run build    # vue-tsc 类型检查 + 生产构建（先类型检查再构建）
 npm run test     # Vitest（尚未编写测试）
 ```
 
-### 集成测试
+前端类型检查也可单独运行：`cd frontend && npx vue-tsc --noEmit`
+
+### 端到端测试
 ```bash
-cd tests
-pytest test_integration.py -v  # 需要后端运行在 localhost:8000
+cd tests && pytest -v
+# 需要：后端运行在 localhost:8000、前端运行在 localhost:3000
+# 使用 requests（API 测试）+ Playwright（UI 测试）
+# helpers/api.py 封装了 ApiHelper，helpers/ui.py 封装了 UiHelper
+# 如果后端不可达，全部测试自动 skip（conftest.py 健康检查）
 ```
 
 ## 架构
@@ -62,7 +77,9 @@ pytest test_integration.py -v  # 需要后端运行在 localhost:8000
 - **Views** (`views/`) — 懒加载页面组件。项目详情使用嵌套路由（Overview、Members、Settings、Tasks）
 - **Components** (`components/`) — 可复用组件：AppLayout、ProjectLayout、StatusBadge、Modal、EmptyState
 - **Types** (`types/index.ts`) — TypeScript 接口，与后端 Pydantic schemas 对应
-- **样式** — UnoCSS（原子化 CSS，不使用组件库）
+- **Locales** (`locales/`) — vue-i18n，`en.json` + `zh-CN.json`
+- **样式** — UnoCSS（原子化 CSS + 自定义 shortcuts：`glass-card`、`btn-primary`、`input-glass` 等，定义在 `uno.config.ts`）。不使用组件库
+- **路径别名** — `@/` 映射到 `./src/`（vite.config.ts + tsconfig.json）
 
 ## 核心工作流（规格驱动开发）
 
@@ -81,9 +98,18 @@ draft → spec_writing → spec_review → spec_locked → in_progress → testi
 
 ## 测试
 
-后端测试在 `backend/tests/`，12 个测试文件按 service 一一对应（含 conftest.py）。测试通过 service 层直接调用（非 HTTP 级别），使用内存 SQLite + pytest-asyncio（auto mode）。主要测试文件：test_spec_driven_flow、test_user_service、test_team_service、test_project_service、test_iteration_service、test_requirement_service、test_specification_service、test_clause_service、test_task_service、test_testcase_service、test_audit_service、test_pagination。
+### 后端单元测试 (`backend/tests/`)
+- 使用 service 层直接调用（非 HTTP 级别），内存 SQLite + pytest-asyncio（auto mode）
+- 每个测试获得独立数据库（conftest.py: `sqlite+aiosqlite://` 内存引擎）
+- `seed_data` fixture 预建 org → team → user → project → iteration 层级
+- 测试文件：test_spec_driven_flow、test_user_service、test_team_service、test_project_service、test_iteration_service、test_specification_service、test_clause_service、test_task_service、test_testcase_service、test_audit_service、test_pagination、test_edit_functionality
 
-集成测试在 `tests/test_integration.py`，使用 Playwright，需要后端运行在 localhost:8000。
+### 端到端测试 (`tests/`)
+- HTTP 级 API 测试（requests）+ Playwright UI 测试
+- `helpers/api.py`：ApiHelper 封装注册/登录、seed 数据创建
+- `helpers/ui.py`：UiHelper 封装 Playwright 页面操作
+- 测试文件按领域划分：test_auth、test_users、test_teams、test_projects、test_iterations、test_requirements、test_specifications、test_tasks、test_testcases、test_coverage、test_audit、test_webhooks、test_full_lifecycle、test_integration
+- 前端目前无单元测试
 
 ## 关键模式
 
@@ -107,13 +133,21 @@ draft → spec_writing → spec_review → spec_locked → in_progress → testi
 
 ## 任务完成后的自动提交规则
 
-**每次完成一个开发任务（修复 bug、添加功能、重构、样式调整等）后，必须使用 `/commit` 命令（subagent）提交并同步代码。**
+**每次完成一个开发任务（修复 bug、添加功能、重构、样式调整等）后，必须使用 git-sync subagent 提交并推送代码。**
 
 具体要求：
-1. 完成任务代码修改后，不要等待用户指示，立即执行 `/commit` 命令
-2. 该命令会使用 glm-4.7 模型的 subagent 自动检查变更、生成提交信息、提交并推送到远程
+1. 完成任务代码修改后，不要等待用户指示，立即启动 git-sync subagent 执行提交和推送
+2. 提交信息应简洁描述变更内容（中文或英文均可）
 3. 即使是微小的样式修改或文本调整，也应提交
 4. 唯一例外：用户明确要求"不要提交"或"稍后提交"时，跳过此步骤
+
+## vue-i18n 注意事项
+
+在 `frontend/src/locales/*.json` 中编写翻译文本时，**所有 `{` 和 `}` 必须转义**：
+- 使用 `{'{'}` 代替 `{`，使用 `{'}'}` 代替 `}`
+- vue-i18n 会将 `{ xxx }` 解析为插值占位符，未转义会导致 `SyntaxError: Invalid token in placeholder`
+- 示例：`"msg": "配置 {'{'} key: value {'}'}"` → 显示为 `配置 { key: value }`
+- `@` 符号同理，使用 `{'@'}` 转义
 
 ## 设计文档
 
