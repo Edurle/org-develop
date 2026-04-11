@@ -345,7 +345,7 @@
   "specGuide": {
     "apiLabel": "接口规格",
     "apiDesc": "定义 API 端点、请求/响应格式、认证方式、错误码等。面向后端开发和集成对接。",
-    "apiExample": "POST /api/auth/login\nRequest:  { username, password }\nResponse: { token, expires_in }\nError 401: { detail: \"凭证无效\" }\n限流: 同一 IP 每分钟最多 10 次",
+    "apiExample": "POST /api/auth/login\nRequest:  {'{'} username, password {'}'}\nResponse: {'{'} token, expires_in {'}'}\nError 401: {'{'} detail: \"凭证无效\" {'}'}\n限流: 同一 IP 每分钟最多 10 次",
     "dataLabel": "数据规格",
     "dataDesc": "定义数据模型、字段约束、存储结构、数据关系等。面向数据层和持久化设计。",
     "dataExample": "User 表:\n  - id: UUID, PK\n  - username: varchar(64), unique, not null\n  - password_hash: varchar(256), not null\n  - login_fail_count: int, default 0\n  - locked_until: datetime, nullable",
@@ -363,7 +363,7 @@
     "securityExample": "S1: 密码传输必须 HTTPS\nS2: 密码存储使用 bcrypt, cost ≥ 12\nS3: Token 使用 HS256 签名\nS4: 登录失败响应统一返回\"凭证无效\"（不提示具体原因）\nS5: 连续失败响应增加随机延迟 200-500ms",
     "eventLabel": "事件规则",
     "eventDesc": "跨系统/跨模块的事件契约——事件名、负载结构、触发条件、消费关系。面向异步解耦和集成。",
-    "eventExample": "LoginSucceeded:\n  trigger: 登录成功\n  payload: { user_id, ip, user_agent, timestamp }\n  consumers: [审计日志服务, 活跃度统计]\n\nLoginFailed:\n  trigger: 登录失败\n  payload: { username, ip, fail_count }\n  consumers: [风控服务, 告警服务]",
+    "eventExample": "LoginSucceeded:\n  trigger: 登录成功\n  payload: {'{'} user_id, ip, user_agent, timestamp {'}'}\n  consumers: [审计日志服务, 活跃度统计]\n\nLoginFailed:\n  trigger: 登录失败\n  payload: {'{'} username, ip, fail_count {'}'}\n  consumers: [风控服务, 告警服务]",
     "configLabel": "配置规则",
     "configDesc": "功能开关、环境差异化行为、阈值参数等可调配置项。不改变逻辑只改变阈值。",
     "configExample": "C1: MAX_LOGIN_ATTEMPTS = 5          # 最大失败次数\nC2: LOCK_DURATION_MINUTES = 30      # 锁定时长\nC3: TOKEN_EXPIRE_HOURS = 24         # Token 有效期\nC4: MAX_CONCURRENT_TOKENS = 3       # 最大并发 Token\nC5: LOGIN_RATE_LIMIT = 10           # 每分钟请求上限"

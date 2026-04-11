@@ -345,7 +345,7 @@
   "specGuide": {
     "apiLabel": "API Specification",
     "apiDesc": "Define API endpoints, request/response formats, authentication, error codes. For backend development and integration.",
-    "apiExample": "POST /api/auth/login\nRequest:  { username, password }\nResponse: { token, expires_in }\nError 401: { detail: \"Invalid credentials\" }\nRate Limit: max 10 requests/min per IP",
+    "apiExample": "POST /api/auth/login\nRequest:  {'{'} username, password {'}'}\nResponse: {'{'} token, expires_in {'}'}\nError 401: {'{'} detail: \"Invalid credentials\" {'}'}\nRate Limit: max 10 requests/min per IP",
     "dataLabel": "Data Specification",
     "dataDesc": "Define data models, field constraints, storage structure, data relationships. For data layer and persistence design.",
     "dataExample": "User table:\n  - id: UUID, PK\n  - username: varchar(64), unique, not null\n  - password_hash: varchar(256), not null\n  - login_fail_count: int, default 0\n  - locked_until: datetime, nullable",
@@ -363,7 +363,7 @@
     "securityExample": "S1: Passwords must be transmitted over HTTPS\nS2: Password storage uses bcrypt, cost ≥ 12\nS3: Tokens signed with HS256\nS4: Login failure returns generic \"Invalid credentials\"\nS5: Add random delay 200-500ms on consecutive failures",
     "eventLabel": "Event Rules",
     "eventDesc": "Cross-system/cross-module event contracts — event names, payloads, triggers, consumers. For async decoupling and integration.",
-    "eventExample": "LoginSucceeded:\n  trigger: Login successful\n  payload: { user_id, ip, user_agent, timestamp }\n  consumers: [AuditService, ActivityTracker]\n\nLoginFailed:\n  trigger: Login failed\n  payload: { username, ip, fail_count }\n  consumers: [RiskControlService, AlertService]",
+    "eventExample": "LoginSucceeded:\n  trigger: Login successful\n  payload: {'{'} user_id, ip, user_agent, timestamp {'}'}\n  consumers: [AuditService, ActivityTracker]\n\nLoginFailed:\n  trigger: Login failed\n  payload: {'{'} username, ip, fail_count {'}'}\n  consumers: [RiskControlService, AlertService]",
     "configLabel": "Configuration Rules",
     "configDesc": "Feature flags, environment-specific behavior, threshold parameters, tunable configs. Changes values, not logic.",
     "configExample": "C1: MAX_LOGIN_ATTEMPTS = 5          # Max failure count\nC2: LOCK_DURATION_MINUTES = 30      # Lock duration\nC3: TOKEN_EXPIRE_HOURS = 24         # Token validity\nC4: MAX_CONCURRENT_TOKENS = 3       # Max concurrent tokens\nC5: LOGIN_RATE_LIMIT = 10           # Requests per minute"
