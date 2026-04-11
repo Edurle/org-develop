@@ -43,6 +43,12 @@ coverage/
 # Superpowers
 .superpowers/
 
+# Claude commands
+.claude/
+
+# PID files
+.pids/
+
 # Build
 *.pyc
 
