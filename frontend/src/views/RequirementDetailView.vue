@@ -8,11 +8,13 @@ import { useTaskStore } from '@/stores/task'
 import { useTestcaseStore } from '@/stores/testcase'
 import { useCoverageStore } from '@/stores/coverage'
 import { useIterationStore } from '@/stores/iteration'
+import { useProjectStore } from '@/stores/project'
+import { teamApi } from '@/api/endpoints'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
 import GlassButton from '@/components/GlassButton.vue'
-import type { SpecType, Priority, DevTask, TestCase } from '@/types'
+import type { SpecType, Priority, DevTask, TestCase, TeamMemberDetail } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +25,7 @@ const taskStore = useTaskStore()
 const tcStore = useTestcaseStore()
 const coverageStore = useCoverageStore()
 const iterStore = useIterationStore()
+const projectStore = useProjectStore()
 
 const projectId = computed(() => route.params.projectId as string)
 const reqId = computed(() => route.params.reqId as string)
@@ -112,6 +115,11 @@ const showEditDevTaskModal = ref(false)
 const editDevTaskId = ref('')
 const editDevTaskTitle = ref('')
 const editDevTaskEstimate = ref<number | null>(null)
+const editDevTaskAssigneeId = ref<string | null>(null)
+
+// Team members for assignee selection
+const teamMembers = ref<TeamMemberDetail[]>([])
+const teamMembersLoaded = ref(false)
 
 // Delete dev task confirmation
 const showDeleteDevTaskConfirm = ref(false)
@@ -197,16 +205,30 @@ async function loadAll() {
   error.value = ''
   try {
     await Promise.all([
+      projectStore.fetchOne(projectId.value),
       reqStore.fetchOne(reqId.value),
       specStore.fetchList(reqId.value),
       iterStore.fetchList(projectId.value),
       taskStore.fetchDevTasks(projectId.value),
       taskStore.fetchTestTasks(projectId.value),
     ])
+    await loadTeamMembers()
   } catch (e: any) {
     error.value = e?.message || t('requirement.errorLoadFailed')
   } finally {
     loading.value = false
+  }
+}
+
+async function loadTeamMembers() {
+  const teamId = projectStore.currentProject?.team_id
+  if (!teamId) return
+  try {
+    const res = await teamApi.membersDetail(teamId)
+    teamMembers.value = res.data
+    teamMembersLoaded.value = true
+  } catch {
+    // silently ignore — assignee selector will just be empty
   }
 }
 
@@ -338,6 +360,7 @@ function openEditDevTaskModal(task: DevTask) {
   editDevTaskId.value = task.id
   editDevTaskTitle.value = task.title
   editDevTaskEstimate.value = task.estimate_hours
+  editDevTaskAssigneeId.value = task.assignee_id
   showEditDevTaskModal.value = true
 }
 
@@ -347,6 +370,7 @@ async function handleEditDevTask() {
     await taskStore.updateDevTask(editDevTaskId.value, {
       title: editDevTaskTitle.value.trim(),
       estimate_hours: editDevTaskEstimate.value,
+      assignee_id: editDevTaskAssigneeId.value,
     })
     showEditDevTaskModal.value = false
   } catch (e: any) {
@@ -622,7 +646,7 @@ onMounted(loadAll)
               >
                 <td class="px-4 py-3 font-medium text-gray-900">{{ task.title }}</td>
                 <td class="px-4 py-3"><StatusBadge :status="task.status" size="sm" /></td>
-                <td class="px-4 py-3 text-gray-500">{{ task.assignee_id ?? t('task.unassigned') }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ task.assignee ? (task.assignee.display_name || task.assignee.username) : t('task.unassigned') }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ task.estimate_hours ?? '-' }}</td>
                 <td class="px-4 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
                 <td class="px-4 py-3">
@@ -1024,6 +1048,15 @@ onMounted(loadAll)
             :placeholder="t('task.optional')"
             class="input-glass"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('task.assignee') }}</label>
+          <select v-model="editDevTaskAssigneeId" class="select-glass">
+            <option :value="null">{{ t('task.unassigned') }}</option>
+            <option v-for="m in teamMembers" :key="m.user_id" :value="m.user_id">
+              {{ m.user.display_name || m.user.username }}
+            </option>
+          </select>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">

@@ -130,7 +130,7 @@ onMounted(loadData)
               <td class="px-5 py-3">
                 <StatusBadge :status="task.status" size="sm" />
               </td>
-              <td class="px-5 py-3 text-gray-500">{{ task.assignee_id ?? t('task.unassigned') }}</td>
+              <td class="px-5 py-3 text-gray-500">{{ task.assignee ? (task.assignee.display_name || task.assignee.username) : t('task.unassigned') }}</td>
               <td class="px-5 py-3 text-gray-500">{{ task.estimate_hours ?? '-' }}</td>
               <td class="px-5 py-3 text-gray-500">{{ formatDate(task.created_at) }}</td>
               <td class="px-5 py-3">

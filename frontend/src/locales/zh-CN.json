@@ -261,7 +261,9 @@
     "assignee": "负责人",
     "unassigned": "未分配",
     "estHours": "预估工时",
-    "noTestCases": "暂无测试用例。"
+    "noTestCases": "暂无测试用例。",
+    "selectDeveloper": "选择开发者",
+    "assignDeveloper": "分配开发者"
   },
   "testcase": {
     "editTestCase": "编辑测试用例",

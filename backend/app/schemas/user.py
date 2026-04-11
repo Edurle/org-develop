@@ -57,3 +57,14 @@ class TeamMemberResponse(BaseModel):
     team_id: str
     roles: str
     joined_at: datetime
+
+
+class TeamMemberDetailResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    team_id: str
+    roles: str
+    joined_at: datetime
+    user: UserResponse

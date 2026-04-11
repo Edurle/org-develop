@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
@@ -16,6 +17,7 @@ from app.schemas.task import (
     DevTaskUpdate,
     TestTaskCreate,
     TestTaskResponse,
+    UserInfo,
 )
 from app.services import task as task_svc
 from app.services.audit import log_action
@@ -25,6 +27,28 @@ router = APIRouter(prefix="/api", tags=["tasks"])
 
 class StatusUpdate(BaseModel):
     status: str
+
+
+def _build_dev_task_resp(t: DevTask) -> dict:
+    data = DevTaskResponse.model_validate(t).model_dump()
+    if t.assignee is not None:
+        data["assignee"] = UserInfo(
+            id=t.assignee.id,
+            username=t.assignee.username,
+            display_name=t.assignee.display_name,
+        ).model_dump()
+    return data
+
+
+def _build_test_task_resp(t: TestTask) -> dict:
+    data = TestTaskResponse.model_validate(t).model_dump()
+    if t.assignee is not None:
+        data["assignee"] = UserInfo(
+            id=t.assignee.id,
+            username=t.assignee.username,
+            display_name=t.assignee.display_name,
+        ).model_dump()
+    return data
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +83,7 @@ async def create_dev_task(
         resource_type="dev_task", resource_id=t.id,
         detail=f"Created dev task '{body.title}'",
     )
-    return DevTaskResponse.model_validate(t).model_dump()
+    return _build_dev_task_resp(t)
 
 
 @router.get("/projects/{project_id}/dev-tasks", response_model=list[DevTaskResponse])
@@ -70,11 +94,12 @@ async def list_dev_tasks(
 ):
     result = await db.execute(
         select(DevTask)
+        .options(selectinload(DevTask.assignee))
         .join(Iteration, DevTask.iteration_id == Iteration.id)
         .where(Iteration.project_id == project_id)
         .order_by(DevTask.created_at)
     )
-    return [DevTaskResponse.model_validate(t).model_dump() for t in result.scalars().all()]
+    return [_build_dev_task_resp(t) for t in result.scalars().all()]
 
 
 @router.patch("/dev-tasks/{task_id}/claim", response_model=DevTaskResponse)
@@ -87,7 +112,11 @@ async def claim_dev_task(
         t = await task_svc.claim_dev_task(db, task_id=task_id, user_id=user.id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    return DevTaskResponse.model_validate(t).model_dump()
+    result = await db.execute(
+        select(DevTask).options(selectinload(DevTask.assignee)).where(DevTask.id == t.id)
+    )
+    t = result.scalars().first()
+    return _build_dev_task_resp(t)
 
 
 @router.patch("/dev-tasks/{task_id}/status", response_model=DevTaskResponse)
@@ -108,7 +137,11 @@ async def update_dev_task_status(
         resource_type="dev_task", resource_id=t.id,
         detail=f"Dev task status changed to '{body.status}'",
     )
-    return DevTaskResponse.model_validate(t).model_dump()
+    result = await db.execute(
+        select(DevTask).options(selectinload(DevTask.assignee)).where(DevTask.id == t.id)
+    )
+    t = result.scalars().first()
+    return _build_dev_task_resp(t)
 
 
 @router.patch("/dev-tasks/{task_id}", response_model=DevTaskResponse)
@@ -136,7 +169,11 @@ async def update_dev_task(
         resource_type="dev_task", resource_id=t.id,
         detail=f"Updated dev task '{t.title}'",
     )
-    return DevTaskResponse.model_validate(t).model_dump()
+    result = await db.execute(
+        select(DevTask).options(selectinload(DevTask.assignee)).where(DevTask.id == t.id)
+    )
+    t = result.scalars().first()
+    return _build_dev_task_resp(t)
 
 
 @router.delete("/dev-tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -186,7 +223,7 @@ async def create_test_task(
         resource_type="test_task", resource_id=t.id,
         detail=f"Created test task '{body.title}'",
     )
-    return TestTaskResponse.model_validate(t).model_dump()
+    return _build_test_task_resp(t)
 
 
 @router.get(
@@ -200,8 +237,9 @@ async def list_test_tasks(
 ):
     result = await db.execute(
         select(TestTask)
+        .options(selectinload(TestTask.assignee))
         .join(Iteration, TestTask.iteration_id == Iteration.id)
         .where(Iteration.project_id == project_id)
         .order_by(TestTask.created_at)
     )
-    return [TestTaskResponse.model_validate(t).model_dump() for t in result.scalars().all()]
+    return [_build_test_task_resp(t) for t in result.scalars().all()]

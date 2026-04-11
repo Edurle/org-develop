@@ -41,6 +41,15 @@ export interface TeamMember {
   joined_at: string
 }
 
+export interface TeamMemberDetail {
+  id: string
+  user_id: string
+  team_id: string
+  roles: string
+  joined_at: string
+  user: User
+}
+
 // ── Project ──
 export interface Project {
   id: string
@@ -144,6 +153,12 @@ export type TaskStatus =
   | 'done'
   | 'blocked'
 
+export interface UserInfo {
+  id: string
+  username: string
+  display_name: string | null
+}
+
 export interface DevTask {
   id: string
   requirement_id: string
@@ -152,6 +167,7 @@ export interface DevTask {
   title: string
   status: TaskStatus
   assignee_id: string | null
+  assignee: UserInfo | null
   estimate_hours: number | null
   created_at: string
   updated_at: string
@@ -164,6 +180,7 @@ export interface TestTask {
   title: string
   status: string
   assignee_id: string | null
+  assignee: UserInfo | null
   created_at: string
   updated_at: string
 }

@@ -5,6 +5,7 @@ import type {
   Organization,
   Team,
   TeamMember,
+  TeamMemberDetail,
   Project,
   Iteration,
   Requirement,
@@ -47,6 +48,7 @@ export const teamApi = {
   create: (data: { org_id: string; name: string; slug: string }) =>
     api.post<Team>('/teams', data),
   members: (teamId: string) => api.get<TeamMember[]>(`/teams/${teamId}/members`),
+  membersDetail: (teamId: string) => api.get<TeamMemberDetail[]>(`/teams/${teamId}/members/detail`),
   addMember: (teamId: string, data: { user_id: string; roles: string }) =>
     api.post<TeamMember>(`/teams/${teamId}/members`, data),
 }

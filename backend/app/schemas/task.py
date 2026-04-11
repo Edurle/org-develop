@@ -5,6 +5,12 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class UserInfo(BaseModel):
+    id: str
+    username: str
+    display_name: str | None = None
+
+
 # ---------------------------------------------------------------------------
 # DevTask
 # ---------------------------------------------------------------------------
@@ -37,6 +43,7 @@ class DevTaskResponse(BaseModel):
     title: str
     status: str
     assignee_id: str | None
+    assignee: UserInfo | None = None
     estimate_hours: float | None
     created_at: datetime
     updated_at: datetime
@@ -69,5 +76,6 @@ class TestTaskResponse(BaseModel):
     title: str
     status: str
     assignee_id: str | None
+    assignee: UserInfo | None = None
     created_at: datetime
     updated_at: datetime

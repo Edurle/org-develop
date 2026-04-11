@@ -261,7 +261,9 @@
     "assignee": "Assignee",
     "unassigned": "Unassigned",
     "estHours": "Est. Hours",
-    "noTestCases": "No test cases yet."
+    "noTestCases": "No test cases yet.",
+    "selectDeveloper": "Select Developer",
+    "assignDeveloper": "Assign Developer"
   },
   "testcase": {
     "editTestCase": "Edit Test Case",

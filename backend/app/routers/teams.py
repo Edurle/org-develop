@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
@@ -15,7 +16,11 @@ from app.schemas.team import (
     TeamCreate,
     TeamResponse,
 )
-from app.schemas.user import TeamMemberCreate, TeamMemberResponse
+from app.schemas.user import (
+    TeamMemberCreate,
+    TeamMemberDetailResponse,
+    TeamMemberResponse,
+)
 from app.services import team as team_svc
 from app.services.audit import log_action
 
@@ -140,3 +145,18 @@ async def list_team_members(
         .order_by(TeamMember.joined_at)
     )
     return [TeamMemberResponse.model_validate(m).model_dump() for m in result.scalars().all()]
+
+
+@router.get("/teams/{team_id}/members/detail", response_model=list[TeamMemberDetailResponse])
+async def list_team_members_detail(
+    team_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _user: Annotated[User, Depends(get_current_user)],
+):
+    result = await db.execute(
+        select(TeamMember)
+        .options(selectinload(TeamMember.user))
+        .where(TeamMember.team_id == team_id)
+        .order_by(TeamMember.joined_at)
+    )
+    return [TeamMemberDetailResponse.model_validate(m).model_dump() for m in result.scalars().all()]
