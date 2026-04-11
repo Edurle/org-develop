@@ -24,7 +24,7 @@ const tcStore = useTestcaseStore()
 const coverageStore = useCoverageStore()
 const iterStore = useIterationStore()
 
-const projectId = computed(() => route.params.id as string)
+const projectId = computed(() => route.params.projectId as string)
 const reqId = computed(() => route.params.reqId as string)
 
 const loading = ref(false)
