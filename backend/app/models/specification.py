@@ -18,7 +18,7 @@ class Specification(Base):
     )
     spec_type: Mapped[str] = mapped_column(
         String(20), nullable=False
-    )  # api, data, flow, ui
+    )  # api, data, flow, ui, rule, security, event, config
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     current_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(

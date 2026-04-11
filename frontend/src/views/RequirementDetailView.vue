@@ -38,6 +38,58 @@ const expandedTestTaskId = ref<string | null>(null)
 const showCreateSpecModal = ref(false)
 const newSpecTitle = ref('')
 const newSpecType = ref<SpecType>('api')
+const showSpecGuide = ref(false)
+
+const specGuides = computed(() => [
+  {
+    type: 'api' as SpecType,
+    label: t('specGuide.apiLabel'),
+    desc: t('specGuide.apiDesc'),
+    example: t('specGuide.apiExample'),
+  },
+  {
+    type: 'data' as SpecType,
+    label: t('specGuide.dataLabel'),
+    desc: t('specGuide.dataDesc'),
+    example: t('specGuide.dataExample'),
+  },
+  {
+    type: 'flow' as SpecType,
+    label: t('specGuide.flowLabel'),
+    desc: t('specGuide.flowDesc'),
+    example: t('specGuide.flowExample'),
+  },
+  {
+    type: 'ui' as SpecType,
+    label: t('specGuide.uiLabel'),
+    desc: t('specGuide.uiDesc'),
+    example: t('specGuide.uiExample'),
+  },
+  {
+    type: 'rule' as SpecType,
+    label: t('specGuide.ruleLabel'),
+    desc: t('specGuide.ruleDesc'),
+    example: t('specGuide.ruleExample'),
+  },
+  {
+    type: 'security' as SpecType,
+    label: t('specGuide.securityLabel'),
+    desc: t('specGuide.securityDesc'),
+    example: t('specGuide.securityExample'),
+  },
+  {
+    type: 'event' as SpecType,
+    label: t('specGuide.eventLabel'),
+    desc: t('specGuide.eventDesc'),
+    example: t('specGuide.eventExample'),
+  },
+  {
+    type: 'config' as SpecType,
+    label: t('specGuide.configLabel'),
+    desc: t('specGuide.configDesc'),
+    example: t('specGuide.configExample'),
+  },
+])
 
 // Create dev task modal
 const showCreateDevTaskModal = ref(false)
@@ -89,12 +141,16 @@ const priorityColorMap: Record<string, string> = {
   critical: 'bg-gradient-to-br from-red-50 to-red-100/50 text-red-700 border-red-200/60',
 }
 
-const specTypeOptions: SpecType[] = ['api', 'data', 'flow', 'ui']
+const specTypeOptions: SpecType[] = ['api', 'data', 'flow', 'ui', 'rule', 'security', 'event', 'config']
 const specTypeColorMap: Record<string, string> = {
   api: 'bg-gradient-to-br from-indigo-50 to-indigo-100/50 text-indigo-700 border-indigo-200/60',
   data: 'bg-gradient-to-br from-teal-50 to-teal-100/50 text-teal-700 border-teal-200/60',
   flow: 'bg-gradient-to-br from-amber-50 to-amber-100/50 text-amber-700 border-amber-200/60',
   ui: 'bg-gradient-to-br from-pink-50 to-pink-100/50 text-pink-700 border-pink-200/60',
+  rule: 'bg-gradient-to-br from-purple-50 to-purple-100/50 text-purple-700 border-purple-200/60',
+  security: 'bg-gradient-to-br from-red-50 to-red-100/50 text-red-700 border-red-200/60',
+  event: 'bg-gradient-to-br from-cyan-50 to-cyan-100/50 text-cyan-700 border-cyan-200/60',
+  config: 'bg-gradient-to-br from-lime-50 to-lime-100/50 text-lime-700 border-lime-200/60',
 }
 
 const currentReq = computed(() => reqStore.currentRequirement)
@@ -820,6 +876,27 @@ onMounted(loadAll)
           >
             <option v-for="opt in specTypeOptions" :key="opt" :value="opt">{{ t('specType.' + opt) }}</option>
           </select>
+        </div>
+
+        <!-- Spec Type Guide -->
+        <div class="border border-gray-200/60 rounded-lg overflow-hidden">
+          <button
+            class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50/50 transition-colors"
+            @click="showSpecGuide = !showSpecGuide"
+          >
+            <span>{{ t('specification.typeGuide') }}</span>
+            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showSpecGuide }" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div v-show="showSpecGuide" class="px-4 pb-4 text-xs text-gray-500 space-y-3 max-h-80 overflow-y-auto">
+            <div v-for="guide in specGuides" :key="guide.type" class="space-y-1">
+              <div class="flex items-center gap-1.5">
+                <span :class="['inline-block px-1.5 py-0.5 rounded text-xs font-medium border', specTypeColorMap[guide.type] ?? '']">{{ t('specType.' + guide.type) }}</span>
+                <span class="text-gray-700 font-medium">{{ guide.label }}</span>
+              </div>
+              <p class="text-gray-500 leading-relaxed">{{ guide.desc }}</p>
+              <pre class="bg-gray-50/80 rounded p-2 text-xs text-gray-600 whitespace-pre-wrap font-mono leading-relaxed border border-gray-100">{{ guide.example }}</pre>
+            </div>
+          </div>
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">

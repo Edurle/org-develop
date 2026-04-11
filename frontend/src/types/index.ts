@@ -91,7 +91,7 @@ export interface Requirement {
 }
 
 // ── Specification ──
-export type SpecType = 'api' | 'data' | 'flow' | 'ui'
+export type SpecType = 'api' | 'data' | 'flow' | 'ui' | 'rule' | 'security' | 'event' | 'config'
 
 export interface Specification {
   id: string

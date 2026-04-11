@@ -236,7 +236,8 @@
     "errorDeleteClause": "Failed to delete clause",
     "errorLoadFailed": "Failed to load specification",
     "category": "Category",
-    "severityLabel": "Severity"
+    "severityLabel": "Severity",
+    "typeGuide": "Spec Type Guide"
   },
   "task": {
     "createDevTask": "Create Dev Task",
@@ -330,12 +331,42 @@
     "api": "API",
     "data": "DATA",
     "flow": "FLOW",
-    "ui": "UI"
+    "ui": "UI",
+    "rule": "RULE",
+    "security": "SECURITY",
+    "event": "EVENT",
+    "config": "CONFIG"
   },
   "severity": {
     "must": "MUST",
     "should": "SHOULD",
     "may": "MAY"
+  },
+  "specGuide": {
+    "apiLabel": "API Specification",
+    "apiDesc": "Define API endpoints, request/response formats, authentication, error codes. For backend development and integration.",
+    "apiExample": "POST /api/auth/login\nRequest:  { username, password }\nResponse: { token, expires_in }\nError 401: { detail: \"Invalid credentials\" }\nRate Limit: max 10 requests/min per IP",
+    "dataLabel": "Data Specification",
+    "dataDesc": "Define data models, field constraints, storage structure, data relationships. For data layer and persistence design.",
+    "dataExample": "User table:\n  - id: UUID, PK\n  - username: varchar(64), unique, not null\n  - password_hash: varchar(256), not null\n  - login_fail_count: int, default 0\n  - locked_until: datetime, nullable",
+    "flowLabel": "Flow Specification",
+    "flowDesc": "Define business state transitions, step orchestration, role permissions, sequencing logic. Describes \"what happens first, then next\".",
+    "flowExample": "1. User submits credentials\n2. Check account lock status → reject if locked\n3. Verify password\n4. Success → reset fail_count, generate JWT, redirect home\n5. Failure → fail_count+1, lock for 30min after 5 fails",
+    "uiLabel": "UI Specification",
+    "uiDesc": "Define view routes, page elements, locators (data-testid/name), interaction roles. For frontend development.",
+    "uiExample": "Route: /login\nElements:\n  - username-input  [interactive]  data-testid: login-username-input\n  - password-input  [interactive]  data-testid: login-password-input\n  - submit-btn      [interactive]  data-testid: login-submit-btn\n  - error-alert     [display]      data-testid: login-error-alert",
+    "ruleLabel": "Business Rules",
+    "ruleDesc": "Declarative business logic — formulas, validation rules, decision tables, constraints. Describes \"what conditions must hold\". Complements flow's procedural orchestration.",
+    "ruleExample": "R1: Lock account after 5 consecutive failures for 30 minutes\nR2: Locked accounts cannot login even with correct password\nR3: Token validity period is 24 hours\nR4: Max 3 concurrent tokens per user",
+    "securityLabel": "Security Rules",
+    "securityDesc": "Access control policies, permission matrices, data masking rules, audit requirements, security measures.",
+    "securityExample": "S1: Passwords must be transmitted over HTTPS\nS2: Password storage uses bcrypt, cost ≥ 12\nS3: Tokens signed with HS256\nS4: Login failure returns generic \"Invalid credentials\"\nS5: Add random delay 200-500ms on consecutive failures",
+    "eventLabel": "Event Rules",
+    "eventDesc": "Cross-system/cross-module event contracts — event names, payloads, triggers, consumers. For async decoupling and integration.",
+    "eventExample": "LoginSucceeded:\n  trigger: Login successful\n  payload: { user_id, ip, user_agent, timestamp }\n  consumers: [AuditService, ActivityTracker]\n\nLoginFailed:\n  trigger: Login failed\n  payload: { username, ip, fail_count }\n  consumers: [RiskControlService, AlertService]",
+    "configLabel": "Configuration Rules",
+    "configDesc": "Feature flags, environment-specific behavior, threshold parameters, tunable configs. Changes values, not logic.",
+    "configExample": "C1: MAX_LOGIN_ATTEMPTS = 5          # Max failure count\nC2: LOCK_DURATION_MINUTES = 30      # Lock duration\nC3: TOKEN_EXPIRE_HOURS = 24         # Token validity\nC4: MAX_CONCURRENT_TOKENS = 3       # Max concurrent tokens\nC5: LOGIN_RATE_LIMIT = 10           # Requests per minute"
   },
   "team": {
     "title": "Teams & Organizations",

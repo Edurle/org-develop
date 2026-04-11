@@ -73,6 +73,32 @@ class TestSpecificationService:
             spec = await create_specification(db, req_id, spec_type, f"{spec_type} Spec")
             assert spec.spec_type == spec_type
 
+    async def test_create_spec_rule_type(self, db, req_with_seed):
+        req_id = req_with_seed["requirement"].id
+        spec = await create_specification(db, req_id, "rule", "Business Rules Spec")
+        assert spec.spec_type == "rule"
+
+    async def test_create_spec_security_type(self, db, req_with_seed):
+        req_id = req_with_seed["requirement"].id
+        spec = await create_specification(db, req_id, "security", "Security Spec")
+        assert spec.spec_type == "security"
+
+    async def test_create_spec_event_type(self, db, req_with_seed):
+        req_id = req_with_seed["requirement"].id
+        spec = await create_specification(db, req_id, "event", "Event Spec")
+        assert spec.spec_type == "event"
+
+    async def test_create_spec_config_type(self, db, req_with_seed):
+        req_id = req_with_seed["requirement"].id
+        spec = await create_specification(db, req_id, "config", "Config Spec")
+        assert spec.spec_type == "config"
+
+    async def test_create_spec_all_eight_types(self, db, req_with_seed):
+        req_id = req_with_seed["requirement"].id
+        for spec_type in ("api", "data", "flow", "ui", "rule", "security", "event", "config"):
+            spec = await create_specification(db, req_id, spec_type, f"{spec_type} Spec")
+            assert spec.spec_type == spec_type
+
     async def test_create_spec_version(self, db, req_with_seed):
         req_id = req_with_seed["requirement"].id
         spec = await create_specification(db, req_id, "api", "API Spec")

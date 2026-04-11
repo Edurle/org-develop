@@ -49,6 +49,10 @@ const specTypeColorMap: Record<string, string> = {
   data: 'bg-gradient-to-br from-teal-50 to-teal-100/50 text-teal-700 border-teal-200/60',
   flow: 'bg-gradient-to-br from-amber-50 to-amber-100/50 text-amber-700 border-amber-200/60',
   ui: 'bg-gradient-to-br from-pink-50 to-pink-100/50 text-pink-700 border-pink-200/60',
+  rule: 'bg-gradient-to-br from-purple-50 to-purple-100/50 text-purple-700 border-purple-200/60',
+  security: 'bg-gradient-to-br from-red-50 to-red-100/50 text-red-700 border-red-200/60',
+  event: 'bg-gradient-to-br from-cyan-50 to-cyan-100/50 text-cyan-700 border-cyan-200/60',
+  config: 'bg-gradient-to-br from-lime-50 to-lime-100/50 text-lime-700 border-lime-200/60',
 }
 
 const severityColorMap: Record<string, string> = {

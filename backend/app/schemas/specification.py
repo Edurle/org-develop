@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 class SpecificationCreate(BaseModel):
     requirement_id: str | None = None
-    spec_type: str  # api, data, flow, ui
+    spec_type: str  # api, data, flow, ui, rule, security, event, config
     title: str
     current_version: int = 0
 

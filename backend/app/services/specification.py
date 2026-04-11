@@ -44,10 +44,10 @@ async def create_specification(
     title: str,
 ) -> Specification:
     """Create a new specification for a requirement."""
-    if spec_type not in ("api", "data", "flow", "ui"):
+    if spec_type not in ("api", "data", "flow", "ui", "rule", "security", "event", "config"):
         raise ValueError(
             f"Invalid spec_type '{spec_type}'. "
-            "Must be one of: api, data, flow, ui"
+            "Must be one of: api, data, flow, ui, rule, security, event, config"
         )
 
     # Verify requirement exists
