@@ -11,6 +11,7 @@ interface User {
 function decodeJwtPayload(token: string): Record<string, unknown> {
   try {
     const base64 = token.split('.')[1]
+    if (!base64) return {}
     const json = atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
     return JSON.parse(json)
   } catch {

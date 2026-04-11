@@ -18,7 +18,6 @@ function detectLocale(): SupportedLocale {
 }
 
 const i18n = createI18n<[MessageSchema], SupportedLocale>({
-  legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'en',
   messages: { en, 'zh-CN': zhCN },

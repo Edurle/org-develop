@@ -16,7 +16,7 @@ vi.mock('@/api/endpoints', () => ({
   },
 }))
 
-import { teamApi, userApi } from '@/api/endpoints'
+import { teamApi } from '@/api/endpoints'
 
 const i18n = createI18n({
   legacy: false,
@@ -102,8 +102,8 @@ describe('TeamMemberPanel', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
     const rows = wrapper.findAll('[data-testid="member-row"]')
-    expect(rows[0].text()).toContain('Alice')
-    expect(rows[0].text()).toContain('Team Admin')
+    expect(rows[0]!.text()).toContain('Alice')
+    expect(rows[0]!.text()).toContain('Team Admin')
   })
 
   it('falls back to username when display_name is null', async () => {
@@ -113,7 +113,7 @@ describe('TeamMemberPanel', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
     const rows = wrapper.findAll('[data-testid="member-row"]')
-    expect(rows[1].text()).toContain('bob')
+    expect(rows[1]!.text()).toContain('bob')
   })
 
   it('shows add member button', async () => {
@@ -177,7 +177,7 @@ describe('TeamMemberPanel', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
     const rows = wrapper.findAll('[data-testid="member-row"]')
-    const roleBtn = rows[0].find('button')
+    const roleBtn = rows[0]!.find('button')
     await roleBtn.trigger('click')
     await wrapper.vm.$nextTick()
     expect(wrapper.find('[data-testid="role-modal"]').exists()).toBe(true)

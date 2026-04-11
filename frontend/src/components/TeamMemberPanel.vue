@@ -40,10 +40,6 @@ const updatingRole = ref(false)
 
 const memberUserIds = computed(() => new Set(members.value.map((m) => m.user_id)))
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString()
-}
-
 function displayName(member: TeamMemberDetail): string {
   return member.user?.display_name || member.user?.username || member.user_id
 }
