@@ -214,7 +214,7 @@ async function handleStatusTransition(newStatus: string) {
   try {
     await reqStore.updateStatus(currentReq.value.id, newStatus)
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -273,7 +273,7 @@ async function handleCreateDevTask() {
     })
     showCreateDevTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -291,7 +291,7 @@ async function handleCreateTestTask() {
     })
     showCreateTestTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -328,7 +328,7 @@ async function handleEditReq() {
     })
     showEditReqModal.value = false
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -349,7 +349,7 @@ async function handleEditDevTask() {
     })
     showEditDevTaskModal.value = false
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -391,7 +391,7 @@ async function handleEditTc() {
     })
     showEditTcModal.value = false
   } catch (e: any) {
-    error.value = e?.message || t('requirement.errorUpdateFailed')
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
   }
 }
 
@@ -414,14 +414,19 @@ function navigateToSpec(specId: string) {
   router.push(`/projects/${projectId.value}/requirements/${reqId.value}/specs/${specId}`)
 }
 
+const canCreateDevTask = computed(() => {
+  const s = currentReq.value?.status
+  return s === 'spec_locked' || s === 'in_progress' || s === 'testing'
+})
+
 // Collect all spec version IDs for the dev task modal
 const allSpecVersions = computed(() => {
   const versions: { id: string; label: string }[] = []
   for (const spec of specStore.specs) {
-    for (const ver of specStore.versions.filter((v) => v.spec_id === spec.id)) {
+    for (const ver of specStore.versions.filter((v) => v.spec_id === spec.id && v.status === 'locked')) {
       versions.push({
         id: ver.id,
-        label: `${spec.title} v${ver.version} (${ver.status})`,
+        label: `${spec.title} v${ver.version}`,
       })
     }
   }
@@ -591,6 +596,7 @@ onMounted(loadAll)
           <h2 class="text-lg font-semibold text-gray-900">{{ t('requirement.devTasks') }}</h2>
           <button
             class="btn-primary"
+            :disabled="!canCreateDevTask"
             @click="openCreateDevTaskModal"
           >
             {{ t('task.createDevTask') }}
@@ -601,7 +607,7 @@ onMounted(loadAll)
           v-if="devTasksForReq.length === 0"
           :title="t('task.noDevTasks')"
           :description="t('task.noDevTasksDesc')"
-          :action-label="t('task.createDevTask')"
+          :action-label="canCreateDevTask ? t('task.createDevTask') : undefined"
           @action="openCreateDevTaskModal"
         />
 
