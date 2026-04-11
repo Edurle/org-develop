@@ -1,3 +1,416 @@
+# Team Member Management Fix Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Fix team member management — enable adding members via user search, show usernames, support removing members and updating roles.
+
+**Architecture:** Backend adds 3 new endpoints (list users, remove member, update member role) + 2 service methods. Frontend rewrites ProjectMembersView to use user search dropdown, member detail display, and delete/role-change actions.
+
+**Tech Stack:** FastAPI + SQLAlchemy async (backend), Vue 3 + TypeScript + UnoCSS (frontend)
+
+---
+
+## File Structure
+
+| Action | File | Responsibility |
+|--------|------|----------------|
+| Modify | `backend/app/services/team.py` | Add `remove_team_member()`, `update_team_member_role()` |
+| Modify | `backend/app/routers/users.py` | Add `GET /users` with optional `?search=` param |
+| Modify | `backend/app/routers/teams.py` | Add `DELETE /teams/{team_id}/members/{member_id}`, `PATCH /teams/{team_id}/members/{member_id}` |
+| Modify | `backend/tests/test_team_service.py` | Add tests for remove & update member |
+| Modify | `backend/tests/test_user_service.py` | Add test for list users with search |
+| Modify | `frontend/src/api/endpoints.ts` | Add `userApi`, `teamApi.removeMember`, `teamApi.updateMember` |
+| Modify | `frontend/src/types/index.ts` | No change needed (types already exist) |
+| Rewrite | `frontend/src/views/ProjectMembersView.vue` | User search dropdown, detail display, remove/role actions |
+| Modify | `frontend/src/locales/zh-CN.json` | Add new translation keys |
+| Modify | `frontend/src/locales/en.json` | Add new translation keys |
+
+---
+
+### Task 1: Add `GET /users` endpoint (list users with search)
+
+**Files:**
+- Modify: `backend/app/routers/users.py`
+
+- [ ] **Step 1: Add list users endpoint to router**
+
+Add the following endpoint to `backend/app/routers/users.py` after the existing `get_user` endpoint (after line 51):
+
+```python
+@router.get("/users", response_model=list[UserResponse])
+async def list_users(
+    search: str | None = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = Depends(get_db),
+    _user: Annotated[User, Depends(get_current_user)] = Depends(get_current_user),
+):
+    query = select(User).order_by(User.created_at)
+    if search:
+        term = f"%{search}%"
+        query = query.where(
+            (User.username.ilike(term)) | (User.display_name.ilike(term)) | (User.email.ilike(term))
+        )
+    query = query.limit(50)
+    result = await db.execute(query)
+    return [UserResponse.model_validate(u).model_dump() for u in result.scalars().all()]
+```
+
+**Note:** This endpoint must be placed BEFORE the `GET /users/{user_id}` route to avoid path conflicts in FastAPI.
+
+- [ ] **Step 2: Run existing tests to verify no regression**
+
+Run: `cd backend && pytest tests/test_user_service.py -v`
+Expected: All existing tests PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/app/routers/users.py
+git commit -m "feat: add GET /users endpoint with search support"
+```
+
+---
+
+### Task 2: Add `remove_team_member` and `update_team_member_role` service methods
+
+**Files:**
+- Modify: `backend/app/services/team.py`
+
+- [ ] **Step 1: Add two new service functions**
+
+Add the following functions to the end of `backend/app/services/team.py`:
+
+```python
+async def remove_team_member(
+    db: AsyncSession, team_id: str, user_id: str
+) -> None:
+    result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+        )
+    )
+    member = result.scalars().first()
+    if member is None:
+        raise ValueError(f"User '{user_id}' is not a member of team '{team_id}'")
+    await db.delete(member)
+    await db.flush()
+
+
+async def update_team_member_role(
+    db: AsyncSession, team_id: str, user_id: str, roles: str
+) -> TeamMember:
+    result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+        )
+    )
+    member = result.scalars().first()
+    if member is None:
+        raise ValueError(f"User '{user_id}' is not a member of team '{team_id}'")
+    member.roles = roles
+    await db.flush()
+    return member
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add backend/app/services/team.py
+git commit -m "feat: add remove_team_member and update_team_member_role services"
+```
+
+---
+
+### Task 3: Add DELETE and PATCH member endpoints to router
+
+**Files:**
+- Modify: `backend/app/routers/teams.py`
+
+- [ ] **Step 1: Update imports and add endpoints**
+
+In `backend/app/routers/teams.py`, add `TeamMemberUpdate` to the import from `app.schemas.user` (line 19-23). Change:
+
+```python
+from app.schemas.user import (
+    TeamMemberCreate,
+    TeamMemberDetailResponse,
+    TeamMemberResponse,
+)
+```
+
+to:
+
+```python
+from app.schemas.user import (
+    TeamMemberCreate,
+    TeamMemberDetailResponse,
+    TeamMemberResponse,
+    TeamMemberUpdate,
+)
+```
+
+Then add these two endpoints after the `list_team_members_detail` endpoint (after line 162):
+
+```python
+@router.delete(
+    "/teams/{team_id}/members/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_team_member(
+    team_id: str,
+    user_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await team_svc.remove_team_member(db, team_id=team_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="team.member.remove",
+        resource_type="team_member", resource_id=user_id,
+        detail=f"Removed user '{user_id}' from team '{team_id}'",
+    )
+
+
+@router.patch(
+    "/teams/{team_id}/members/{user_id}",
+    response_model=TeamMemberResponse,
+)
+async def update_team_member(
+    team_id: str,
+    user_id: str,
+    body: TeamMemberUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        member = await team_svc.update_team_member_role(
+            db, team_id=team_id, user_id=user_id, roles=body.roles
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="team.member.update",
+        resource_type="team_member", resource_id=member.id,
+        detail=f"Updated member '{user_id}' roles to '{body.roles}' in team '{team_id}'",
+    )
+    return TeamMemberResponse.model_validate(member).model_dump()
+```
+
+- [ ] **Step 2: Run existing tests to verify no regression**
+
+Run: `cd backend && pytest tests/test_team_service.py -v`
+Expected: All existing tests PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/app/routers/teams.py
+git commit -m "feat: add DELETE and PATCH endpoints for team members"
+```
+
+---
+
+### Task 4: Add backend tests for new functionality
+
+**Files:**
+- Modify: `backend/tests/test_team_service.py`
+
+- [ ] **Step 1: Add tests for remove and update member**
+
+Add the following test methods to `TestTeamMember` class in `backend/tests/test_team_service.py`, and add `remove_team_member, update_team_member_role` to the imports:
+
+Update import (line 16-19):
+
+```python
+from app.services.team import (
+    create_organization,
+    create_team,
+    add_team_member,
+    remove_team_member,
+    update_team_member_role,
+)
+```
+
+Append to `TestTeamMember` class (after line 124):
+
+```python
+    async def test_remove_member(self, db: AsyncSession):
+        org = await create_organization(db, "Remove Org", "remove-org")
+        team = await create_team(db, org.id, "Remove Team", "remove-team")
+        user = await create_user(
+            db, "removeuser", "remove@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        await remove_team_member(db, team.id, user.id)
+        result = await db.execute(
+            select(TeamMember).where(
+                TeamMember.team_id == team.id,
+                TeamMember.user_id == user.id,
+            )
+        )
+        assert result.scalars().first() is None
+
+    async def test_remove_member_not_found(self, db: AsyncSession):
+        with pytest.raises(ValueError, match="not a member"):
+            await remove_team_member(db, "any-team", "any-user")
+
+    async def test_update_member_role(self, db: AsyncSession):
+        org = await create_organization(db, "Update Org", "update-org")
+        team = await create_team(db, org.id, "Update Team", "update-team")
+        user = await create_user(
+            db, "updateuser", "update@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        updated = await update_team_member_role(db, team.id, user.id, "admin")
+        assert updated.roles == "admin"
+
+    async def test_update_member_role_not_found(self, db: AsyncSession):
+        with pytest.raises(ValueError, match="not a member"):
+            await update_team_member_role(db, "any-team", "any-user", "admin")
+```
+
+- [ ] **Step 2: Run all team service tests**
+
+Run: `cd backend && pytest tests/test_team_service.py -v`
+Expected: All tests PASS (including new ones)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add backend/tests/test_team_service.py
+git commit -m "test: add tests for remove and update team member"
+```
+
+---
+
+### Task 5: Update frontend API layer
+
+**Files:**
+- Modify: `frontend/src/api/endpoints.ts`
+
+- [ ] **Step 1: Add userApi and extend teamApi**
+
+In `frontend/src/api/endpoints.ts`:
+
+Add `userApi` after the `authApi` block (after line 34), before the `// ── Organizations ──` comment:
+
+```typescript
+// ── Users ──
+
+export const userApi = {
+  list: (search?: string) =>
+    api.get<User[]>('/users', { params: { search } }),
+}
+```
+
+Extend `teamApi` by adding `removeMember` and `updateMember` methods. Change the `teamApi` object (lines 46-54):
+
+```typescript
+export const teamApi = {
+  list: () => api.get<Team[]>('/teams'),
+  create: (data: { org_id: string; name: string; slug: string }) =>
+    api.post<Team>('/teams', data),
+  members: (teamId: string) => api.get<TeamMember[]>(`/teams/${teamId}/members`),
+  membersDetail: (teamId: string) => api.get<TeamMemberDetail[]>(`/teams/${teamId}/members/detail`),
+  addMember: (teamId: string, data: { user_id: string; roles: string }) =>
+    api.post<TeamMember>(`/teams/${teamId}/members`, data),
+  removeMember: (teamId: string, userId: string) =>
+    api.delete(`/teams/${teamId}/members/${userId}`),
+  updateMember: (teamId: string, userId: string, data: { roles: string }) =>
+    api.patch<TeamMember>(`/teams/${teamId}/members/${userId}`, data),
+}
+```
+
+- [ ] **Step 2: Run type check**
+
+Run: `cd frontend && npx vue-tsc --noEmit`
+Expected: No type errors
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/api/endpoints.ts
+git commit -m "feat: add userApi and extend teamApi with remove/update member"
+```
+
+---
+
+### Task 6: Update locales
+
+**Files:**
+- Modify: `frontend/src/locales/zh-CN.json`
+- Modify: `frontend/src/locales/en.json`
+
+- [ ] **Step 1: Add new translation keys**
+
+In `frontend/src/locales/zh-CN.json`, add the following keys inside the `"project"` section (after `"describeProject"` line 153):
+
+```json
+    "searchUsers": "搜索用户",
+    "searchUsersPlaceholder": "输入用户名搜索...",
+    "noUsersFound": "未找到用户",
+    "removeMember": "移除成员",
+    "confirmRemove": "确认移除",
+    "confirmRemoveMsg": "确认从团队中移除该成员？",
+    "updateRole": "更新角色",
+    "failedRemoveMember": "移除成员失败。",
+    "failedUpdateRole": "更新角色失败。",
+    "memberRemoved": "成员已移除。",
+    "roleUpdated": "角色已更新。",
+    "developer": "开发者",
+    "username": "用户名",
+    "displayName": "显示名",
+    "selectUser": "选择用户",
+    "loadingUsers": "加载用户中...",
+    "alreadyMember": "该用户已是团队成员。",
+    "remove": "移除"
+```
+
+In `frontend/src/locales/en.json`, add the same keys (after `"describeProject"` line 153):
+
+```json
+    "searchUsers": "Search Users",
+    "searchUsersPlaceholder": "Type username to search...",
+    "noUsersFound": "No users found",
+    "removeMember": "Remove Member",
+    "confirmRemove": "Confirm Remove",
+    "confirmRemoveMsg": "Are you sure you want to remove this member from the team?",
+    "updateRole": "Update Role",
+    "failedRemoveMember": "Failed to remove member.",
+    "failedUpdateRole": "Failed to update role.",
+    "memberRemoved": "Member removed.",
+    "roleUpdated": "Role updated.",
+    "developer": "Developer",
+    "username": "Username",
+    "displayName": "Display Name",
+    "selectUser": "Select User",
+    "loadingUsers": "Loading users...",
+    "alreadyMember": "This user is already a team member.",
+    "remove": "Remove"
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add frontend/src/locales/zh-CN.json frontend/src/locales/en.json
+git commit -m "feat: add team member management translation keys"
+```
+
+---
+
+### Task 7: Rewrite ProjectMembersView
+
+**Files:**
+- Rewrite: `frontend/src/views/ProjectMembersView.vue`
+
+- [ ] **Step 1: Rewrite the component**
+
+Replace the entire content of `frontend/src/views/ProjectMembersView.vue` with:
+
+```vue
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -400,3 +813,48 @@ onMounted(loadMembers)
     </Modal>
   </div>
 </template>
+```
+
+**Note:** This uses `GlassButton variant="danger"` for the remove button. If `GlassButton` doesn't support `danger` variant, we need to add it. Let's check.
+
+- [ ] **Step 2: Check if GlassButton supports `danger` variant. If not, add it.**
+
+Read `frontend/src/components/GlassButton.vue`. If it doesn't have a `danger` variant, add support for it (a red-colored button style). The implementation depends on the existing code.
+
+- [ ] **Step 3: Run type check**
+
+Run: `cd frontend && npx vue-tsc --noEmit`
+Expected: No type errors
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add frontend/src/views/ProjectMembersView.vue
+git commit -m "feat: rewrite ProjectMembersView with user search, remove, role update"
+```
+
+---
+
+### Task 8: Run full verification
+
+- [ ] **Step 1: Run all backend tests**
+
+Run: `cd backend && pytest -v`
+Expected: All tests PASS
+
+- [ ] **Step 2: Run frontend type check**
+
+Run: `cd frontend && npx vue-tsc --noEmit`
+Expected: No type errors
+
+- [ ] **Step 3: Run frontend build**
+
+Run: `cd frontend && npm run build`
+Expected: Build succeeds
+
+- [ ] **Step 4: Final commit if any lint fixes needed**
+
+```bash
+git add -A
+git commit -m "fix: lint and type fixes for team member management"
+```

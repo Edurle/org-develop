@@ -16,6 +16,8 @@ from app.services.team import (
     create_organization,
     create_team,
     add_team_member,
+    remove_team_member,
+    update_team_member_role,
 )
 from app.services.user import create_user
 
@@ -122,3 +124,52 @@ class TestTeamMember:
         m2 = await add_team_member(db, team.id, user2.id, '["developer"]')
         assert m1.user_id != m2.user_id
         assert m1.team_id == m2.team_id == team.id
+
+
+class TestRemoveTeamMember:
+    async def test_remove_member(self, db: AsyncSession):
+        org = await create_organization(db, "Remove Org", "remove-org")
+        team = await create_team(db, org.id, "Remove Team", "remove-team")
+        user = await create_user(
+            db, "removeuser", "remove@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        await remove_team_member(db, team.id, user.id)
+        result = await db.execute(
+            select(TeamMember).where(
+                TeamMember.team_id == team.id,
+                TeamMember.user_id == user.id,
+            )
+        )
+        assert result.scalars().first() is None
+
+    async def test_remove_member_not_in_team(self, db: AsyncSession):
+        with pytest.raises(ValueError, match="not a member"):
+            await remove_team_member(db, "any-team", "any-user")
+
+    async def test_remove_member_and_re_add(self, db: AsyncSession):
+        org = await create_organization(db, "Readd Org", "readd-org")
+        team = await create_team(db, org.id, "Readd Team", "readd-team")
+        user = await create_user(
+            db, "readduser", "readd@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        await remove_team_member(db, team.id, user.id)
+        member = await add_team_member(db, team.id, user.id, "admin")
+        assert member.roles == "admin"
+
+
+class TestUpdateTeamMemberRole:
+    async def test_update_member_role(self, db: AsyncSession):
+        org = await create_organization(db, "UpdRole Org", "updrole-org")
+        team = await create_team(db, org.id, "UpdRole Team", "updrole-team")
+        user = await create_user(
+            db, "updroleuser", "updrole@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        updated = await update_team_member_role(db, team.id, user.id, "admin")
+        assert updated.roles == "admin"
+
+    async def test_update_member_role_not_found(self, db: AsyncSession):
+        with pytest.raises(ValueError, match="not a member"):
+            await update_team_member_role(db, "any-team", "any-user", "admin")

@@ -1,5 +1,5 @@
 """Service layer for user management."""
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import hash_password
@@ -42,6 +42,24 @@ async def get_user(db: AsyncSession, user_id: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def list_users(
+    db: AsyncSession, search: str | None = None
+) -> list[User]:
+    query = select(User).order_by(User.created_at)
+    if search:
+        term = f"%{search}%"
+        query = query.where(
+            or_(
+                User.username.ilike(term),
+                User.display_name.ilike(term),
+                User.email.ilike(term),
+            )
+        )
+    query = query.limit(50)
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
 async def update_user(
     db: AsyncSession,
     user_id: str,
@@ -55,7 +73,6 @@ async def update_user(
         raise ValueError(f"User '{user_id}' not found")
 
     if email is not None:
-        # Check uniqueness
         existing = await db.execute(
             select(User).where(User.email == email, User.id != user_id)
         )

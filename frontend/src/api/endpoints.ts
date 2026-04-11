@@ -33,6 +33,13 @@ export const authApi = {
   me: () => api.get<User>('/auth/me'),
 }
 
+// ── Users ──
+
+export const userApi = {
+  list: (search?: string) =>
+    api.get<User[]>('/users', { params: { search } }),
+}
+
 // ── Organizations ──
 
 export const orgApi = {
@@ -51,6 +58,10 @@ export const teamApi = {
   membersDetail: (teamId: string) => api.get<TeamMemberDetail[]>(`/teams/${teamId}/members/detail`),
   addMember: (teamId: string, data: { user_id: string; roles: string }) =>
     api.post<TeamMember>(`/teams/${teamId}/members`, data),
+  removeMember: (teamId: string, userId: string) =>
+    api.delete(`/teams/${teamId}/members/${userId}`),
+  updateMember: (teamId: string, userId: string, data: { roles: string }) =>
+    api.patch<TeamMember>(`/teams/${teamId}/members/${userId}`, data),
 }
 
 // ── Projects ──

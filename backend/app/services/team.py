@@ -69,3 +69,36 @@ async def add_team_member(
     db.add(member)
     await db.flush()
     return member
+
+
+async def remove_team_member(
+    db: AsyncSession, team_id: str, user_id: str
+) -> None:
+    result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+        )
+    )
+    member = result.scalars().first()
+    if member is None:
+        raise ValueError(f"User '{user_id}' is not a member of team '{team_id}'")
+    await db.delete(member)
+    await db.flush()
+
+
+async def update_team_member_role(
+    db: AsyncSession, team_id: str, user_id: str, roles: str
+) -> TeamMember:
+    result = await db.execute(
+        select(TeamMember).where(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+        )
+    )
+    member = result.scalars().first()
+    if member is None:
+        raise ValueError(f"User '{user_id}' is not a member of team '{team_id}'")
+    member.roles = roles
+    await db.flush()
+    return member

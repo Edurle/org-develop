@@ -150,7 +150,20 @@
     "projectNameNoMatch": "Project name does not match.",
     "failedDeleteProject": "Failed to delete project.",
     "failedLoadProjectShort": "Failed to load project.",
-    "describeProject": "Describe your project..."
+    "describeProject": "Describe your project...",
+    "searchUsers": "Search Users",
+    "searchUsersPlaceholder": "Type username to search...",
+    "noUsersFound": "No users found",
+    "removeMember": "Remove Member",
+    "confirmRemove": "Confirm Remove",
+    "confirmRemoveMsg": "Are you sure you want to remove this member from the team?",
+    "updateRole": "Update Role",
+    "failedRemoveMember": "Failed to remove member.",
+    "failedUpdateRole": "Failed to update role.",
+    "developer": "Developer",
+    "selectUser": "Select User",
+    "loadingUsers": "Loading users...",
+    "remove": "Remove"
   },
   "iteration": {
     "title": "Iterations",

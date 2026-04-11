@@ -150,7 +150,20 @@
     "projectNameNoMatch": "项目名称不匹配。",
     "failedDeleteProject": "删除项目失败。",
     "failedLoadProjectShort": "加载项目失败。",
-    "describeProject": "描述您的项目..."
+    "describeProject": "描述您的项目...",
+    "searchUsers": "搜索用户",
+    "searchUsersPlaceholder": "输入用户名搜索...",
+    "noUsersFound": "未找到用户",
+    "removeMember": "移除成员",
+    "confirmRemove": "确认移除",
+    "confirmRemoveMsg": "确认从团队中移除该成员？",
+    "updateRole": "更新角色",
+    "failedRemoveMember": "移除成员失败。",
+    "failedUpdateRole": "更新角色失败。",
+    "developer": "开发者",
+    "selectUser": "选择用户",
+    "loadingUsers": "加载用户中...",
+    "remove": "移除"
   },
   "iteration": {
     "title": "迭代",

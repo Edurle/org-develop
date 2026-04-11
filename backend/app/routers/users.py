@@ -13,6 +13,16 @@ from app.services import user as user_svc
 router = APIRouter(prefix="/api", tags=["users"])
 
 
+@router.get("/users", response_model=list[UserResponse])
+async def list_users(
+    search: str | None = None,
+    db: Annotated[AsyncSession, Depends(get_db)] = Depends(get_db),
+    _user: Annotated[User, Depends(get_current_user)] = Depends(get_current_user),
+):
+    users = await user_svc.list_users(db, search=search)
+    return [UserResponse.model_validate(u).model_dump() for u in users]
+
+
 @router.get("/users/me", response_model=UserResponse)
 async def get_current_user_info(
     user: Annotated[User, Depends(get_current_user)],

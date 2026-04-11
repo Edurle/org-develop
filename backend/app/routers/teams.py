@@ -20,6 +20,7 @@ from app.schemas.user import (
     TeamMemberCreate,
     TeamMemberDetailResponse,
     TeamMemberResponse,
+    TeamMemberUpdate,
 )
 from app.services import team as team_svc
 from app.services.audit import log_action
@@ -160,3 +161,49 @@ async def list_team_members_detail(
         .order_by(TeamMember.joined_at)
     )
     return [TeamMemberDetailResponse.model_validate(m).model_dump() for m in result.scalars().all()]
+
+
+@router.delete(
+    "/teams/{team_id}/members/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_team_member(
+    team_id: str,
+    user_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        await team_svc.remove_team_member(db, team_id=team_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="team.member.remove",
+        resource_type="team_member", resource_id=user_id,
+        detail=f"Removed user '{user_id}' from team '{team_id}'",
+    )
+
+
+@router.patch(
+    "/teams/{team_id}/members/{user_id}",
+    response_model=TeamMemberResponse,
+)
+async def update_team_member(
+    team_id: str,
+    user_id: str,
+    body: TeamMemberUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        member = await team_svc.update_team_member_role(
+            db, team_id=team_id, user_id=user_id, roles=body.roles
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    await log_action(
+        db, user_id=user.id, action="team.member.update",
+        resource_type="team_member", resource_id=member.id,
+        detail=f"Updated member '{user_id}' roles to '{body.roles}' in team '{team_id}'",
+    )
+    return TeamMemberResponse.model_validate(member).model_dump()
