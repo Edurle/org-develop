@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.requirement import Requirement
+from app.models.specification import Specification, SpecVersion
 from app.services.audit import log_action
 from app.services.coverage import check_coverage_sufficient
 from app.services.webhook import WebhookEvent, dispatch_event
@@ -29,6 +30,70 @@ def _is_valid_transition(current: str, target: str) -> bool:
     """Check whether transitioning from current to target status is allowed."""
     allowed = _VALID_TRANSITIONS.get(current, [])
     return target in allowed
+
+
+async def _has_any_spec(db: AsyncSession, requirement_id: str) -> bool:
+    result = await db.execute(
+        select(Specification).where(Specification.requirement_id == requirement_id)
+    )
+    return result.scalars().first() is not None
+
+
+async def _all_specs_submitted_or_locked(db: AsyncSession, requirement_id: str) -> bool:
+    result = await db.execute(
+        select(Specification).where(Specification.requirement_id == requirement_id)
+    )
+    specs = list(result.scalars().all())
+    if not specs:
+        return False
+    for spec in specs:
+        ver_result = await db.execute(
+            select(SpecVersion).where(
+                SpecVersion.spec_id == spec.id,
+                SpecVersion.status.in_(["reviewing", "locked"]),
+            )
+        )
+        if ver_result.scalars().first() is None:
+            return False
+    return True
+
+
+async def _all_specs_locked(db: AsyncSession, requirement_id: str) -> bool:
+    result = await db.execute(
+        select(Specification).where(Specification.requirement_id == requirement_id)
+    )
+    specs = list(result.scalars().all())
+    if not specs:
+        return False
+    for spec in specs:
+        ver_result = await db.execute(
+            select(SpecVersion).where(
+                SpecVersion.spec_id == spec.id,
+                SpecVersion.status == "locked",
+            )
+        )
+        if ver_result.scalars().first() is None:
+            return False
+    return True
+
+
+async def _has_locked_version(db: AsyncSession, requirement_id: str) -> bool:
+    result = await db.execute(
+        select(Specification).where(Specification.requirement_id == requirement_id)
+    )
+    specs = list(result.scalars().all())
+    if not specs:
+        return False
+    for spec in specs:
+        ver_result = await db.execute(
+            select(SpecVersion).where(
+                SpecVersion.spec_id == spec.id,
+                SpecVersion.status == "locked",
+            )
+        )
+        if ver_result.scalars().first() is not None:
+            return True
+    return False
 
 
 async def create_requirement(
@@ -153,6 +218,31 @@ async def update_requirement_status(
             f"Allowed transitions from '{current_status}': "
             f"{_VALID_TRANSITIONS.get(current_status, [])}"
         )
+
+    if new_status == "spec_review":
+        if not await _has_any_spec(db, requirement_id):
+            raise ValueError(
+                "Cannot submit for review: at least one specification must exist. "
+                "Create specifications before submitting."
+            )
+        if not await _all_specs_submitted_or_locked(db, requirement_id):
+            raise ValueError(
+                "Cannot submit for review: all specifications must be "
+                "submitted for review or locked."
+            )
+
+    if new_status == "spec_locked":
+        if not await _all_specs_locked(db, requirement_id):
+            raise ValueError(
+                "Cannot lock requirement: all specifications must have a locked version."
+            )
+
+    if new_status == "in_progress":
+        if not await _has_locked_version(db, requirement_id):
+            raise ValueError(
+                "Cannot start development: at least one specification "
+                "must have a locked version."
+            )
 
     # Coverage gate: testing -> done requires sufficient coverage
     if new_status == "done":
