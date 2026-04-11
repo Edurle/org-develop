@@ -173,3 +173,46 @@ class TestUpdateTeamMemberRole:
     async def test_update_member_role_not_found(self, db: AsyncSession):
         with pytest.raises(ValueError, match="not a member"):
             await update_team_member_role(db, "any-team", "any-user", "admin")
+
+
+class TestTeamMemberRoles:
+    TEAM_ROLES = ["team_admin", "product_owner", "designer", "developer", "tester", "viewer"]
+
+    async def test_add_member_with_each_role(self, db: AsyncSession):
+        org = await create_organization(db, "Roles Org", "roles-org")
+        team = await create_team(db, org.id, "Roles Team", "roles-team")
+        for i, role in enumerate(self.TEAM_ROLES):
+            user = await create_user(
+                db, f"roleuser{i}", f"role{i}@example.com", "password123"
+            )
+            member = await add_team_member(db, team.id, user.id, role)
+            assert member.roles == role
+
+    async def test_update_to_each_role(self, db: AsyncSession):
+        org = await create_organization(db, "UpdRoles Org", "updroles-org")
+        team = await create_team(db, org.id, "UpdRoles Team", "updroles-team")
+        user = await create_user(
+            db, "updrolesuser", "updroles@example.com", "password123"
+        )
+        await add_team_member(db, team.id, user.id, "developer")
+        for role in self.TEAM_ROLES:
+            updated = await update_team_member_role(db, team.id, user.id, role)
+            assert updated.roles == role
+
+    async def test_mixed_roles_in_team(self, db: AsyncSession):
+        org = await create_organization(db, "Mixed Org", "mixed-org")
+        team = await create_team(db, org.id, "Mixed Team", "mixed-team")
+        users_and_roles = [
+            ("mixedadmin", "team_admin"),
+            ("mixedpo", "product_owner"),
+            ("mixeddesigner", "designer"),
+            ("mixeddev", "developer"),
+            ("mixedtester", "tester"),
+            ("mixedviewer", "viewer"),
+        ]
+        for username, role in users_and_roles:
+            user = await create_user(
+                db, username, f"{username}@example.com", "password123"
+            )
+            member = await add_team_member(db, team.id, user.id, role)
+            assert member.roles == role
