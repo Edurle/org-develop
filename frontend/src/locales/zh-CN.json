@@ -279,6 +279,11 @@
     "assignDeveloper": "分配开发者"
   },
   "testcase": {
+    "createTestCase": "创建测试用例",
+    "newTestCase": "新建测试用例",
+    "linkClauses": "关联规格条款",
+    "linkClausesDesc": "选择此测试用例覆盖的规格条款。",
+    "noClausesAvailable": "暂无可用条款，请先锁定规格版本。",
     "editTestCase": "编辑测试用例",
     "deleteTestCase": "删除测试用例",
     "deleteTestCaseConfirm": "确定要删除「{title}」吗？此操作无法撤销。",

@@ -279,6 +279,11 @@
     "assignDeveloper": "Assign Developer"
   },
   "testcase": {
+    "createTestCase": "Create Test Case",
+    "newTestCase": "New Test Case",
+    "linkClauses": "Link Spec Clauses",
+    "linkClausesDesc": "Select spec clauses this test case covers.",
+    "noClausesAvailable": "No clauses available. Lock a spec version first.",
     "editTestCase": "Edit Test Case",
     "deleteTestCase": "Delete Test Case",
     "deleteTestCaseConfirm": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",

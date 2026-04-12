@@ -10,11 +10,12 @@ import { useCoverageStore } from '@/stores/coverage'
 import { useIterationStore } from '@/stores/iteration'
 import { useProjectStore } from '@/stores/project'
 import { teamApi } from '@/api/endpoints'
+import { specApi } from '@/api/endpoints'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Modal from '@/components/Modal.vue'
 import GlassButton from '@/components/GlassButton.vue'
-import type { SpecType, Priority, DevTask, TestCase, TeamMemberDetail } from '@/types'
+import type { SpecType, Priority, DevTask, TestCase, SpecClause, TeamMemberDetail } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,6 +141,17 @@ const showDeleteTcConfirm = ref(false)
 const deleteTcId = ref('')
 const deleteTcTitle = ref('')
 
+// Create test case modal
+const showCreateTcModal = ref(false)
+const createTcTaskId = ref('')
+const newTcTitle = ref('')
+const newTcPreconditions = ref('')
+const newTcSteps = ref('')
+const newTcExpected = ref('')
+const selectedClauseIds = ref<string[]>([])
+const availableClauses = ref<SpecClause[]>([])
+const loadingClauses = ref(false)
+
 // Coverage check
 const coverageSufficient = ref<boolean | null>(null)
 
@@ -256,6 +268,30 @@ async function toggleTestTaskExpand(taskId: string) {
   } else {
     expandedTestTaskId.value = taskId
     await tcStore.fetchList(taskId)
+    await loadAvailableClauses()
+  }
+}
+
+async function loadAvailableClauses() {
+  loadingClauses.value = true
+  availableClauses.value = []
+  try {
+    const allClauses: SpecClause[] = []
+    for (const spec of specStore.specs) {
+      await specStore.fetchVersions(spec.id)
+      const lockedVersions = specStore.versions.filter(
+        (v) => v.spec_id === spec.id && v.status === 'locked',
+      )
+      for (const ver of lockedVersions) {
+        const res = await specApi.listClauses(ver.id)
+        allClauses.push(...res.data)
+      }
+    }
+    availableClauses.value = allClauses
+  } catch {
+    // silently ignore
+  } finally {
+    loadingClauses.value = false
   }
 }
 
@@ -432,6 +468,41 @@ async function handleDeleteTc() {
     showDeleteTcConfirm.value = false
   } catch (e: any) {
     error.value = e?.message || t('requirement.errorDeleteFailed')
+  }
+}
+
+function openCreateTcModal(taskId: string) {
+  createTcTaskId.value = taskId
+  newTcTitle.value = ''
+  newTcPreconditions.value = ''
+  newTcSteps.value = ''
+  newTcExpected.value = ''
+  selectedClauseIds.value = []
+  showCreateTcModal.value = true
+}
+
+async function handleCreateTc() {
+  if (!newTcTitle.value.trim() || !newTcSteps.value.trim() || !newTcExpected.value.trim()) return
+  try {
+    await tcStore.create(createTcTaskId.value, {
+      title: newTcTitle.value.trim(),
+      preconditions: newTcPreconditions.value || undefined,
+      steps: newTcSteps.value,
+      expected_result: newTcExpected.value,
+      clause_ids: selectedClauseIds.value.length > 0 ? selectedClauseIds.value : undefined,
+    })
+    showCreateTcModal.value = false
+  } catch (e: any) {
+    error.value = e?.response?.data?.detail || e?.message || t('requirement.errorUpdateFailed')
+  }
+}
+
+function toggleClauseSelection(clauseId: string) {
+  const idx = selectedClauseIds.value.indexOf(clauseId)
+  if (idx === -1) {
+    selectedClauseIds.value.push(clauseId)
+  } else {
+    selectedClauseIds.value.splice(idx, 1)
   }
 }
 
@@ -711,6 +782,11 @@ onMounted(loadAll)
 
             <!-- Expanded test cases -->
             <div v-if="expandedTestTaskId === task.id" class="border-t border-blue-500/5 px-5 py-3 bg-blue-500/[0.01]">
+              <div class="flex justify-end mb-2">
+                <GlassButton size="small" @click.stop="openCreateTcModal(task.id)">
+                  {{ t('testcase.createTestCase') }}
+                </GlassButton>
+              </div>
               <div v-if="tcStore.testCases.length === 0" class="text-sm text-gray-500">
                 {{ t('task.noTestCases') }}
               </div>
@@ -1139,6 +1215,88 @@ onMounted(loadAll)
       <div class="flex justify-end gap-3 mt-6">
         <GlassButton variant="secondary" @click="showDeleteTcConfirm = false">{{ t('common.cancel') }}</GlassButton>
         <GlassButton variant="danger" @click="handleDeleteTc">{{ t('common.delete') }}</GlassButton>
+      </div>
+    </Modal>
+
+    <!-- Create Test Case Modal -->
+    <Modal :show="showCreateTcModal" :title="t('testcase.newTestCase')" @close="showCreateTcModal = false">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('common.title') }}</label>
+          <input
+            v-model="newTcTitle"
+            type="text"
+            :placeholder="t('testcase.testCaseTitle')"
+            class="input-glass"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.preconditions') }}</label>
+          <textarea
+            v-model="newTcPreconditions"
+            :placeholder="t('testcase.preconditionsPlaceholder')"
+            class="input-glass"
+            rows="2"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.steps') }}</label>
+          <textarea
+            v-model="newTcSteps"
+            :placeholder="t('testcase.stepsPlaceholder')"
+            class="input-glass"
+            rows="3"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.expectedResult') }}</label>
+          <textarea
+            v-model="newTcExpected"
+            :placeholder="t('testcase.expectedResultPlaceholder')"
+            class="input-glass"
+            rows="2"
+          ></textarea>
+        </div>
+        <div v-if="availableClauses.length > 0">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ t('testcase.linkClauses') }}</label>
+          <p class="text-xs text-gray-500 mb-2">{{ t('testcase.linkClausesDesc') }}</p>
+          <div class="space-y-1 max-h-48 overflow-y-auto border border-gray-200/60 rounded-lg p-3">
+            <template v-for="severity in (['must', 'should', 'may'] as const)" :key="severity">
+              <div
+                v-for="clause in availableClauses.filter(c => c.severity === severity)"
+                :key="clause.id"
+                class="flex items-center gap-2 py-1"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedClauseIds.includes(clause.id)"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  @change="toggleClauseSelection(clause.id)"
+                />
+                <span :class="[
+                  'badge-base text-xs',
+                  clause.severity === 'must' ? 'bg-gradient-to-br from-red-50 to-red-100/50 text-red-700 border-red-200/60' :
+                  clause.severity === 'should' ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 text-amber-700 border-amber-200/60' :
+                  'bg-gradient-to-br from-gray-50 to-gray-100/50 text-gray-600 border-gray-200/60',
+                ]">{{ clause.severity.toUpperCase() }}</span>
+                <span class="text-xs font-mono text-gray-500">{{ clause.clause_id }}</span>
+                <span class="text-sm text-gray-700">{{ clause.title }}</span>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div v-else-if="!loadingClauses" class="text-xs text-gray-400">
+          {{ t('testcase.noClausesAvailable') }}
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <GlassButton variant="secondary" @click="showCreateTcModal = false">{{ t('common.cancel') }}</GlassButton>
+        <GlassButton
+          :disabled="!newTcTitle.trim() || !newTcSteps.trim() || !newTcExpected.trim()"
+          @click="handleCreateTc"
+        >
+          {{ t('common.create') }}
+        </GlassButton>
       </div>
     </Modal>
   </div>
